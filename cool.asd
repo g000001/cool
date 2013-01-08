@@ -2,11 +2,39 @@
 
 (cl:in-package :asdf)
 
-(defsystem :cool
+
+(defsystem :cool.pcl
   :serial t
   :depends-on (:fiveam)
+  :components ((:file "pcl-package")
+               (:file "pcl-walk")
+               (:file "pcl-macros")
+               (:file "pcl-low")
+               #+sbcl (:file "pcl-sbcl-low")
+               (:file "pcl-braid")
+               (:file "pcl-class-slots")
+               (:file "pcl-defclass")
+               (:file "pcl-class-prot")
+               (:file "pcl-methods")
+               (:file "pcl-dfun-templ")
+               (:file "pcl-fixup")
+               (:file "pcl-high")
+               (:file "pcl-compat")))
+
+
+(defsystem :cool
+  :serial t
+  :depends-on (:fiveam :cool.pcl)
   :components ((:file "package")
-               (:file "cool")))
+               (:file "pcl-patches")
+               (:file "co-macros")
+               (:file "co-dmeth")
+               (:file "co-meta")
+               (:file "co-dtype")
+               (:file "co-sfun")
+               (:file "co-test")
+               (:file "co-regress")))
+
 
 (defmethod perform ((o test-op) (c (eql (find-system :cool))))
   (load-system :cool)
