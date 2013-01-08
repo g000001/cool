@@ -10,6 +10,7 @@
                (:file "cltl1-compat")
                #-sbcl (:file "pcl-walk")
                #-sbcl (:file "pcl-walk-test")
+               #+sbcl (:file "pcl-sbcl-walk")
                (:file "pcl-macros")
                (:file "pcl-low")
                #+sbcl (:file "pcl-sbcl-low")

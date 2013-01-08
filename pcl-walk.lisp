@@ -711,15 +711,12 @@
 ;;;    
 
 (defun make-lexical-environment (macrolet/flet/labels-form environment)
-  nil
-  #|(evalhook (list (car macrolet/flet/labels-form)
+  (evalhook (list (car macrolet/flet/labels-form)
                   (cadr macrolet/flet/labels-form)
                   (list 'make-lexical-environment-2))
             'make-lexical-environment-1
             ()
-            environment)|#)
-
-(sb-walker::with-augmented-environment ())
+            environment))
 
 
 (defun make-lexical-environment-1 (form env)
