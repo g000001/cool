@@ -7,7 +7,9 @@
   :serial t
   :depends-on (:fiveam)
   :components ((:file "pcl-package")
-               (:file "pcl-walk")
+               (:file "cltl1-compat")
+               #-sbcl (:file "pcl-walk")
+               #-sbcl (:file "pcl-walk-test")
                (:file "pcl-macros")
                (:file "pcl-low")
                #+sbcl (:file "pcl-sbcl-low")
