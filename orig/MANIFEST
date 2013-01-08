@@ -1,0 +1,47 @@
+   File Name		Archive #	Description
+-----------------------------------------------------------
+ 3600-low.l                2	
+ MANIFEST                  1	This shipping list
+ README                    1	
+ braid.l                  10	
+ class-prot.l              8	
+ class-slots.l             4	
+ co-defsys.l               1	
+ co-dmeth.l                7	
+ co-dtype.l               11	
+ co-macros.l               2	
+ co-meta.l                 3	
+ co-parse.l               13	
+ co-prof.l                 2	
+ co-sfun.l                 2	
+ co-test.l                 2	
+ compat.l                  1	
+ compile-it.sh             1	
+ defclass.l                4	
+ defsys.l                  3	
+ dfun-templ.l              2	
+ excl-low.l                1	
+ fixup.l                   3	
+ fsc-low.l                 4	
+ gfun-low.l                6	
+ high.l                    3	
+ hp-low.l                  1	
+ kcl-low.l                 1	
+ low.l                     8	
+ lucid-low.l               1	
+ macros.l                  7	
+ meth-combi.l              5	
+ methods.l                12	
+ ntype-of.l                1	
+ pcl-patches.l             2	
+ profmacs.l                5	
+ regress.l                 4	
+ semantics.asci            1	
+ spice-low.l               1	
+ sublines                  1	
+ test.l                    6	
+ ti-low.l                  1	
+ trapd.l                   1	
+ vaxl-low.l                1	
+ walk.l                    9	
+ xerox-low.l               2	

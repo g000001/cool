@@ -1,0 +1,67 @@
+
+	Semantic Changes for CommonObjects
+	  on CommonLoops (COOL)
+
+
+1) It is not possible to have seperately defined methods
+   inherited if the methods and the child types are
+   defined in the same file as the parent. Methods which are generated
+   by the parent type definition are inheritable, however.
+   In general, defining parent types and methods and 
+   child types and methods in seperate files is a good idea.
+   The parent types and methods must be defined in the
+   compile time environment of the child.
+
+2) The universal methods :PRINT, :DESCRIBE, :TYPEP, :COPY,
+   :COPY-INSTANCE, :COPY-STATE, :EQL, :EQUAL, :EQUALP
+   :INIT, and :INITIALIZE
+   are defined in common for all CommonObjects types. The
+   user can redefine these methods for a particular type, 
+   but cannot undefine them if the type uses the default 
+   method. A warning message is issued if the user tries
+   to undefine a default universal method.
+
+3) SELF is SETF-able within a method. SELF will also
+   be accepted as an instance variable name.
+
+4) The :VARIABLES suboption for inheritence is not
+   supported. Trying to use it will cause an error
+   during type definition.
+
+5) The :TYPE suboption of :VAR has no effect. It
+   may be included (for documentation purposes)
+   and will not cause an error to be signalled.
+
+6) An instance variable named SET-x and an
+   instance variable named x which is declared
+   settable in the same type cause no warning
+   message to be generated.
+
+7) Types are fully defined at compile time (minus
+   generated methods). Compiling a type will thus
+   cause a defined type in the environment to be
+   trashed. The actual time when the type is defined
+   is during expansion of the DEFINE-TYPE macro.
+
+8) In order to have the universal methods invoked for 
+   the Lisp functions TYPEP, EQL, EQUAL, and EQUALP
+   and have TYPE-OF return the CommonObjects type
+   rather than the Lisp type for a CommonObjects
+   object, the macro CO:IMPORT-SPECIALIZED-FUNCTIONS
+   must be invoked in the package where CommonObjects
+   is to be used. Special functions which shadow the
+   defined Lisp functions are used to avoid problems
+   with infinite recursion and excessive CONSing
+   which may otherwise result. In addition, the 
+   default universal method for TYPEP does not
+   signal an error when an undefined type name
+   is given.
+
+9) The argument lists of methods with the same
+   name on different types must match. The
+   exact rules for argument conformity are
+   outlined in the Common Lisp Object System
+   document (the proposed standard) but for purposes
+   of COOL, the lists must have the same number
+   of required, &REST, and keyword parameters.
+
