@@ -670,7 +670,8 @@
   `(get-static-slot--class ,iwmc-class
         (%convert-slotd-position-to-slot-index 
          ;;-- TODO: load-time-value
-         (load-time-value (slotd-position ,slot-name *bootstrap-slots*)))))
+         ;; (load-time-value (slotd-position ,slot-name *bootstrap-slots*))
+         (slotd-position ,slot-name *bootstrap-slots*))))
 
 (defun bootstrap-initialize (iwmc-class name includes local-slots
                                         prototype wrapper ds-options)

@@ -6,7 +6,7 @@
   ;;
 
 
-(sb-walker:var-lexical-p )
+#+sbcl
 (defmacro take-it-out-for-a-test-walk (form)
   `(progn 
      (terpri)
@@ -42,6 +42,7 @@
        result)))
 
 
+#-sbcl
 (defmacro take-it-out-for-a-test-walk (form)
   `(progn 
      (terpri)
@@ -175,7 +176,7 @@
 (take-it-out-for-a-test-walk (cond (a b)
                                    ((foo bar) a (foo a))))
 
-
+#-sbcl
 (let ((the-lexical-variables ()))
   (walk-form '(let ((a 1) (b 2))
 		#'(lambda (x) (list a b x y)))
@@ -190,7 +191,7 @@
 	   (member 'x the-lexical-variables))
       (error "Walker didn't do lexical variables of a closure properly.")))
 
-
+#+sbcl
 (let ((the-lexical-variables ()))
   (sb-walker:walk-form '(let ((a 1) (b 2))
                          #'(lambda (x) (list a b x y)))

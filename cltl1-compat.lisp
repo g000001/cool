@@ -14,7 +14,12 @@
 
 ;; (cltl1-error )
 
-(defun evalhook (&rest args)
-  (format t "~{A~^ ~}~%" (list args)))
+#|(defun evalhook (&rest args)
+  (format t "~{A~^ ~}~%" (list args)))|#
+
+
+(defmacro defun-compile-time (name args &body body)
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (defun ,name ,args ,@body)))
 
 

@@ -101,24 +101,25 @@
        `((lambda ,(nreverse ,run-time-vars)  ,wrapped-body)
          . ,(nreverse ,run-time-vals)))))
 
-(defun extract-declarations (body &optional environment)
-  (declare (cl:ignore environment))
-  ;; (declare (values documentation declares body))
-  (let (documentation declares form temp)
-    (declare (cl:ignore temp))
-    (when (stringp (car body)) (setq documentation (pop body)))
-    (loop
-      (when (null body) (return))
-      (setq form (car body))
-      (cond ((and (listp form) (eq (car form) 'declare))
-	     (push (pop body) declares))
-;	    ((and (neq (setq temp (macroexpand form environment)) form)
-;		  (listp temp)
-;		  (eq (car temp) 'declare))
-;	     (pop body)
-;	     (push temp declares))
-	    (t (return))))
-    (values documentation declares body)))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun extract-declarations (body &optional environment)
+   (declare (cl:ignore environment))
+   ;; (declare (values documentation declares body))
+   (let (documentation declares form temp)
+     (declare (cl:ignore temp))
+     (when (stringp (car body)) (setq documentation (pop body)))
+     (loop
+       (when (null body) (return))
+       (setq form (car body))
+       (cond ((and (listp form) (eq (car form) 'declare))
+              (push (pop body) declares))
+                                        ;	    ((and (neq (setq temp (macroexpand form environment)) form)
+                                        ;		  (listp temp)
+                                        ;		  (eq (car temp) 'declare))
+                                        ;	     (pop body)
+                                        ;	     (push temp declares))
+             (t (return))))
+     (values documentation declares body))))
 
   ;;   
 ;;;;;; FAST-NCONC Lists
@@ -145,7 +146,7 @@
   `(fast-nconc-cons ,fast-nconc-list (cons ,item nil)))
 
 #+Lucid
-(eval-when (compile load eval)
+(cltl1-eval-when (compile load eval)
   (eval `(defstruct ,(intern "FASLESCAPE" (find-package 'lucid)))))
 
 ; rds 3/8 added -HP and +HP for make-keyword:
@@ -191,6 +192,7 @@
 (defmacro destructuring-bind (pattern form &body body)
   (multiple-value-bind (ignore declares body)
       (extract-declarations body)
+    (declare (ignore ignore))
     (multiple-value-bind (setqs binds)
 	(destructure pattern form)
       `(let ,binds
@@ -436,10 +438,12 @@
       (while (test)
 	`(until (not ,test)))
       (initially (&body body)
+        (declare (ignore body))
 	(error
 	  "It is an error for FINALLY to appear other than at top-level~%~
 	   inside an iterate."))
       (finally (&body ignore)
+        (declare (ignore ignore))
 	(error
 	  "It is an error for INITIALLY to appear other than at top-level~%~
            inside an iterate."))
@@ -484,7 +488,7 @@
          (entry-var (gensym)))
     (dolist (kw keywords)
       (unless (listp kw) (setq kw (list kw)))      
-      (destructuring-bind (var default supplied-p-var . options) kw
+      (destructuring-bind (var default &optional supplied-p-var &rest options) kw
         (keyword-bind (presence (allowed ':required) return-cdr) options
           (push var lambda-list)
           (when supplied-p-var
@@ -650,7 +654,7 @@
   (let ((body-expander-function (gensym))
 	(parameters (remove lambda-list-keywords arglist
 			    :test #'(lambda (x y) (member y x)))))
-    `(eval-when (compile load eval)
+    `(cltl1-eval-when (compile load eval)
        ,(and global `(defmacro ,name ,arglist ,global))
        (defun ,body-expander-function
 	      (macroexpand-time-environment ,@parameters)
