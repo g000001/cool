@@ -124,6 +124,9 @@
 ;;;     performance in systems which do allow control over where memory is
 ;;;     allocated.
 ;;; 
+(defmacro class-wrapper-class (class-wrapper)
+  `(memory-block-ref ,class-wrapper 0))
+
 (defmacro make-memory-block (size &optional area)
   (declare (ignore area))
   `(make-array ,size :initial-element nil))
@@ -469,8 +472,7 @@
      (setf (class-wrapper-valid-p wrapper) t)
      wrapper))
 
-(defmacro class-wrapper-class (class-wrapper)
-  `(memory-block-ref ,class-wrapper 0))
+;;; class-wrapper-class here
 
 (defmacro class-wrapper-valid-p (class-wrapper)
   `(memory-block-ref ,class-wrapper 1))

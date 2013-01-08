@@ -643,157 +643,76 @@
 ;;  method, because the users can put anthing they want into
 ;;  the initialization code, including CALL-METHOD.
 
-(defun build-init-vars-method
-  (name initable-slots assignments)
-
-  (let
-    (    
-      (form NIL)
-      (kwpak (find-package 'keyword))
-      (code NIL)
-    )
-
-
+(defun build-init-vars-method (name initable-slots assignments)
+  (let ((form NIL) 
+        (kwpak (find-package 'keyword))
+        (code NIL))
     ;;This code is stolen from DEFINE-METHOD and is
     ;;  inserted in line here so that, when it
     ;;  gets returned to the top level, COOL.PCL::EXPAND-DEFMETH-INTERNAL
     ;;  gets invoked while the DEFINE-TYPE macro is executing,
     ;;  rather than at the top level, when the macro has
     ;;  finished executing.
-
     (setf code
-      `(compiler-let
-        (
-          (*current-method-class-name* ',name)
-        )   
-
-
-        (let ((self (self-from-inner-self)))
-          (declare (ignorable self))
-           #|(declare (optimize (speed 3) (safety 0)))|#
-
-          (with*
-            (
-              (.inner-self. "" ,name)
-            )
-
-            ,(if initable-slots
-
-              `(do*
-                (
-	          (unprocessed-keys keylist (cddr unprocessed-keys))
-	          (keyword (car unprocessed-keys) (car unprocessed-keys))
-	          (value (cadr unprocessed-keys) (cadr unprocessed-keys))
-                )
-                ( (null unprocessed-keys) )
-  	          (case keyword
-	            ,@(dolist (var initable-slots form)
-	              (push 
-                        `(
-                          (,(intern (symbol-name var) kwpak) ) 
-                          (setf ,var value)
-                        ) 
-		        form
-                      )
-	            )
-                  )
-              )
-
-           ) ;if
-
-            ,@assignments
-
-          ) ;with*
-
-      ) ;let
-      ) ;compiler-let
-    ) ;setf
-
+          `(compiler-let ((*current-method-class-name* ',name))   
+             (let ((self (self-from-inner-self)))
+               (declare (ignorable self))
+               #|(declare (optimize (speed 3) (safety 0)))|#
+               (with* ((.inner-self. "" ,name))
+                 ,(if initable-slots
+                      `(do* ((unprocessed-keys keylist (cddr unprocessed-keys))
+                             (keyword (car unprocessed-keys)
+                                      (car unprocessed-keys))
+                             (value (cadr unprocessed-keys)
+                                    (cadr unprocessed-keys)))
+                            ((null unprocessed-keys))
+                         (case keyword
+                           ,@(dolist (var initable-slots form)
+                               (push `((,(intern (symbol-name var) kwpak) ) 
+                                       (setf ,var value))
+                                     form)))))
+                 ,@assignments))))
     ;;Now define as a full blown CommonObjects method, with code
     ;; walking and everything. Add in CALL-METHOD processing.
-
     `(progn
-
-      ,(defcommon-objects-meth 
-        'keyword-standin::initialize-variables
-        `((.inner-self. ,name) &rest keylist)
-        code
-      )
-
-     ) ;progn
-
-   ) ;end let
-
-) ;end build-init-vars-method
+       ,(defcommon-objects-meth
+            'keyword-standin::initialize-variables
+            `((.inner-self. ,name) &rest keylist)
+          code))))
 
 ;;build-pcl-method-def-Build a PCL method definition without
 ;; all the overhead of code walking and method object creation
 ;; at compile time
 
 (defun build-pcl-method-def (type method func-args code)
-
   (setf method
         (if (keywordp method)
             (keyword-standin method)
-            method
-        )
-  )
-
-  (let*
-    (
-      (type-spec (list type))
-      (method-function-name (cool.pcl::make-method-name method type-spec))
-    )
-
+            method))
+  (let* ((type-spec (list type))
+         (method-function-name (cool.pcl::make-method-name method type-spec)))
     ;;The extra list is so the forms get inserted at the
     ;;  top level OK
-
-   `(
-     (cltl1-eval-when (compile load eval)
+   `((cltl1-eval-when (compile load eval)
        (cool.pcl::record-definition 
-         ',method 'cool.pcl::method ',type-spec NIL
-       )
+        ',method 'cool.pcl::method ',type-spec NIL)
        (defun ,method-function-name ,func-args
          #|(declare (optimize (speed 3) (safety 0)))|#
-	,code
-       )
-     )
-
+	,code))
      ;;Note that this must be done at compile time
      ;;  as well, since inherited methods must
      ;;  be there for other types in the file
-
      (cltl1-eval-when (compile load eval)
-       (let
-         (
-           (method 
-             (cool.pcl::load-method-1
-               'cool.pcl::discriminator
-               'common-objects-method
-               ',method
-               ',type-spec
-               ',func-args
-               NIL
-             )
-
-           )
-
-        )
-
-        (setf (method-function method)
-              (symbol-function ',method-function-name)
-        )
-
-        (add-method (discriminator-named ',method) method NIL)
-      )
-
-    )
-
-   )
-
-  ) ;let*
-
-) ;build-pcl-method-def
+       (let ((method (cool.pcl::load-method-1
+                      'cool.pcl::discriminator
+                      'common-objects-method
+                      ',method
+                      ',type-spec
+                      ',func-args
+                      NIL))) 
+         (setf (method-function method)
+               (symbol-function ',method-function-name))
+         (add-method (discriminator-named ',method) method NIL))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Get/Set and Inherited Method Building Functions
@@ -897,10 +816,7 @@
 ;;keyword-standin::init-Default :INIT method does nothing
 
 (define-universal-method keyword-standin::init 
-  ((self common-objects-class) &rest keylist)
-
-
-) ;keyword-standin::init
+  ((self common-objects-class) &rest keylist))
  
 ;;keyword-standin::initialize-Default :INITIALIZE initializes
 ;;  parents, then variables

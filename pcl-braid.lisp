@@ -135,16 +135,20 @@
 ;;;;;; Early methods
   ;;   
 
-(defvar *real-methods-exist-p*)
+
 (cltl1-eval-when (compile load eval)
+  (defvar *real-methods-exist-p*)
   (setq *real-methods-exist-p* nil))
 
 (cltl1-eval-when (load)  
   (setq *error-when-defining-method-on-existing-function* 'bootstrapping))
 
-(defvar *protected-early-selectors* '(print-instance))
 
-(defparameter *early-defmeths* ())
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *protected-early-selectors* '(print-instance))
+
+  (defparameter *early-defmeths* ()) )
+
 
 (defmacro simple-type-specs (arglist)
   `(let ((type-specs
@@ -227,15 +231,16 @@
                                ,@(simple-args (cdr args)))))))))))))
 ;)
 
-(defun record-early-defmeth (discriminator-name name&options arglist body)
+(defun-compile-time record-early-defmeth
+                    (discriminator-name name&options arglist body)
   (pushnew (list* 'defmeth discriminator-name name&options arglist body)
 	   *early-defmeths*
 	   :test #'equal))
 
-(defun record-early-discriminator (discriminator-name)
+(defun-compile-time record-early-discriminator (discriminator-name)
   (pushnew (list 'clear discriminator-name) *early-defmeths* :test #'equal))
 
-(defun record-early-method-fixup (form)
+(defun-compile-time record-early-method-fixup (form)
   (pushnew (list 'eval form) *early-defmeths* :test #'equal))
 
 (defmacro fix-early-defmeths ()
@@ -273,7 +278,7 @@
   (intern (string-append name " :SETF-discriminator")
           (symbol-package name)))
 
-(defun make-method-name (selector type-specifiers)
+(defun-compile-time make-method-name (selector type-specifiers)
   (intern (apply #'string-append
                       (list* "Method "
                              selector
@@ -281,7 +286,8 @@
                              (make-method-name-internal type-specifiers)))
 	  (symbol-package selector)))
 
-(defun make-setf-method-name (selector setf-type-specifiers type-specifiers)
+(defun-compile-time make-setf-method-name
+                    (selector setf-type-specifiers type-specifiers)
   (intern (apply #'string-append
                       (list* "Method "
                              selector
@@ -293,7 +299,7 @@
                              (make-method-name-internal type-specifiers)))
 	  (symbol-package selector)))
 
-(defun make-method-name-internal (type-specifiers)
+(defun-compile-time make-method-name-internal (type-specifiers)
   (if type-specifiers
       (iterate ((type-spec on type-specifiers))
         (collect (string (car type-spec)))
@@ -354,20 +360,21 @@
 ;;; this allows new meta-classes to inherit the option parsing code 
 ;;; from other metaclasses.
 ;;;
-(defstruct (ds-options (:constructor make-ds-options--class))
-  name
-  constructors             ;The constructor argument, a list whose car is the
-			   ;name of the constructor and whose cadr if present
-                           ;is the argument-list for the constructor.
-  copier                   ;(defaulted) value of the :copier option.
-  predicate                ;ditto for :predicate
-  print-function           ;ditto for :print-function
-  generate-accessors       ;ditto for :generate-accessors
-  conc-name                ;ditto for :conc-name 
-  includes                 ;The included structures (car of :include)
-  slot-includes            ;The included slot modifications (cdr of :include)
-  initial-offset           ;(defaulted) value of the :initial-offset option.
-  )
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defstruct (ds-options (:constructor make-ds-options--class))
+   name
+   constructors     ;The constructor argument, a list whose car is the
+                                        ;name of the constructor and whose cadr if present
+                                        ;is the argument-list for the constructor.
+   copier                   ;(defaulted) value of the :copier option.
+   predicate                ;ditto for :predicate
+   print-function           ;ditto for :print-function
+   generate-accessors       ;ditto for :generate-accessors
+   conc-name                ;ditto for :conc-name 
+   includes                 ;The included structures (car of :include)
+   slot-includes    ;The included slot modifications (cdr of :include)
+   initial-offset   ;(defaulted) value of the :initial-offset option.
+   ))
 
   
 
@@ -375,152 +382,157 @@
 ;;;;;; The beginnings of the meta-class CLASS (parsing the defstruct)
   ;;   
 
-(defmeth make-ds-options ((class basic-class) name)
-  (declare (ignore class))
-  (make-ds-options--class :name name))
 
-(defmeth parse-defstruct-options ((class basic-class) name options)
-  (parse-defstruct-options-internal
-    class name options
-    (default-ds-options class name (make-ds-options class name))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmeth make-ds-options ((class basic-class) name)
+    (declare (ignore class))
+    (make-ds-options--class :name name))
 
-(defmeth default-ds-options ((class basic-class) name ds-options)
-  (declare (ignore class))
-  (setf
-    (ds-options-constructors ds-options)       `((,(symbol-append "MAKE-"
-								  name)))
-    (ds-options-copier ds-options)             (symbol-append "COPY-" name)
-    (ds-options-predicate ds-options)          (symbol-append name "-P")
-    (ds-options-print-function ds-options)     nil
-    (ds-options-generate-accessors ds-options) 'method
-    (ds-options-conc-name ds-options)          (symbol-append name "-")
-    (ds-options-includes ds-options)           ()
-    (ds-options-slot-includes ds-options)      ()
-    (ds-options-initial-offset ds-options)     0)
-  ds-options)
+  (defmeth parse-defstruct-options ((class basic-class) name options)
+    (parse-defstruct-options-internal
+     class name options
+     (default-ds-options class name (make-ds-options class name))))
+  
+  (defmeth default-ds-options ((class basic-class) name ds-options)
+    (declare (ignore class))
+    (setf
+     (ds-options-constructors ds-options)       `((,(symbol-append "MAKE-"
+                                                                   name)))
+     (ds-options-copier ds-options)             (symbol-append "COPY-" name)
+     (ds-options-predicate ds-options)          (symbol-append name "-P")
+     (ds-options-print-function ds-options)     nil
+     (ds-options-generate-accessors ds-options) 'method
+     (ds-options-conc-name ds-options)          (symbol-append name "-")
+     (ds-options-includes ds-options)           ()
+     (ds-options-slot-includes ds-options)      ()
+     (ds-options-initial-offset ds-options)     0)
+    ds-options)
 
-(defmeth parse-defstruct-options-internal ((class basic-class)
-					    name options ds-options)
-  (declare (ignore class name))
-  (keyword-parse ((conc-name (ds-options-conc-name ds-options))
-                  (constructor () constructor-p :allowed :multiple
-						:return-cdr t)
-                  (copier (ds-options-copier ds-options))
-                  (predicate (ds-options-predicate ds-options))
-                  (include () include-p :return-cdr t)
-                  (print-function () print-function-p)
-                  (initial-offset (ds-options-initial-offset ds-options))
-                  (generate-accessors (ds-options-generate-accessors
-					ds-options)))
-                 options
-    (setf (ds-options-conc-name ds-options) conc-name)
-    (when constructor-p
-      (setf (ds-options-constructors ds-options) constructor))
-    (setf (ds-options-copier ds-options) copier)
-    (setf (ds-options-predicate ds-options) predicate)
-    (when include-p
-      (destructuring-bind (includes . slot-includes) include
-	(setf (ds-options-includes ds-options) (if (listp includes)
-						   includes
-						   (list includes))
-	      (ds-options-slot-includes ds-options) slot-includes)))
-    (when print-function-p
-      (setf (ds-options-print-function ds-options)
-	    (cond ((null print-function) nil)
-		  ((symbolp print-function) print-function)
-		  ((and (listp print-function)
-			(eq (car print-function) 'lambda)
-			(listp (cadr print-function)))
-		   print-function)
-		  (t
-		   (error "The :PRINT-FUNCTION option, ~S~%~
+  (defmeth parse-defstruct-options-internal ((class basic-class)
+                                             name options ds-options)
+    (declare (ignore class name))
+    (keyword-parse ((conc-name (ds-options-conc-name ds-options))
+                    (constructor () constructor-p :allowed :multiple
+                                 :return-cdr t)
+                    (copier (ds-options-copier ds-options))
+                    (predicate (ds-options-predicate ds-options))
+                    (include () include-p :return-cdr t)
+                    (print-function () print-function-p)
+                    (initial-offset (ds-options-initial-offset ds-options))
+                    (generate-accessors (ds-options-generate-accessors
+                                         ds-options)))
+        options
+      (setf (ds-options-conc-name ds-options) conc-name)
+      (when constructor-p
+        (setf (ds-options-constructors ds-options) constructor))
+      (setf (ds-options-copier ds-options) copier)
+      (setf (ds-options-predicate ds-options) predicate)
+      (when include-p
+        (destructuring-bind (includes . slot-includes) include
+          (setf (ds-options-includes ds-options) (if (listp includes)
+                                                     includes
+                                                     (list includes))
+                (ds-options-slot-includes ds-options) slot-includes)))
+      (when print-function-p
+        (setf (ds-options-print-function ds-options)
+              (cond ((null print-function) nil)
+                    ((symbolp print-function) print-function)
+                    ((and (listp print-function)
+                          (eq (car print-function) 'lambda)
+                          (listp (cadr print-function)))
+                     print-function)
+                    (t
+                     (error "The :PRINT-FUNCTION option, ~S~%~
                            is not either nil or a function suitable for the~
                            function special form."
-			   print-function)))))
-    (setf (ds-options-initial-offset ds-options) initial-offset)
-    (setf (ds-options-generate-accessors ds-options) generate-accessors)
-    ds-options))
+                            print-function)))))
+      (setf (ds-options-initial-offset ds-options) initial-offset)
+      (setf (ds-options-generate-accessors ds-options) generate-accessors)
+      ds-options)) )
+
 
 ;;;
 ;;;
 
-(defvar *slotd-unsupplied* (list nil))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defvar *slotd-unsupplied* (list nil))
 
-(defstruct (class-slotd (:include essential-slotd)
-			(:type list)
-			(:conc-name slotd-)
-			(:constructor make-slotd--class)
-			(:copier copy-slotd))
-  keyword
-  (default *slotd-unsupplied*)
-  (type *slotd-unsupplied*)
-  (read-only *slotd-unsupplied*)
-  (accessor *slotd-unsupplied*)
-  (allocation *slotd-unsupplied*)
-  get-function   ;NIL if no :get(put)-function argument was supplied.
-  put-function   ;Otherwise, a function of two (three)arguments, the
-                 ;object, the name of the slot (and the new-value).
-  )
-
-(defmeth make-slotd ((class basic-class) &rest keywords-and-options)
+  (defstruct (class-slotd (:include essential-slotd)
+                          (:type list)
+                          (:conc-name slotd-)
+                          (:constructor make-slotd--class)
+                          (:copier copy-slotd))
+    keyword
+    (default *slotd-unsupplied*)
+    (type *slotd-unsupplied*)
+    (read-only *slotd-unsupplied*)
+    (accessor *slotd-unsupplied*)
+    (allocation *slotd-unsupplied*)
+    get-function   ;NIL if no :get(put)-function argument was supplied.
+    put-function   ;Otherwise, a function of two (three)arguments, the
+                                        ;object, the name of the slot (and the new-value).
+    )
+  
+  (defmeth make-slotd ((class basic-class) &rest keywords-and-options)
   (declare (ignore class))
   (apply #'make-slotd--class keywords-and-options))
 
-(defmeth parse-slot-descriptions ((class basic-class) ds-options slot-descriptions)
-  (iterate ((slot-description in slot-descriptions))
-    (collect (parse-slot-description class ds-options slot-description))))
-
-(defmeth parse-slot-description ((class basic-class) ds-options slot-description)
-  (parse-slot-description-internal
-    class ds-options slot-description (make-slotd class)))
-
-(defmeth parse-slot-description-internal ((class basic-class) ds-options slot-description slotd)
-  (declare (ignore class))
-  (let ((conc-name (ds-options-conc-name ds-options))
+  (defmeth parse-slot-descriptions ((class basic-class) ds-options slot-descriptions)
+    (iterate ((slot-description in slot-descriptions))
+      (collect (parse-slot-description class ds-options slot-description))))
+  
+  (defmeth parse-slot-description ((class basic-class) ds-options slot-description)
+    (parse-slot-description-internal
+     class ds-options slot-description (make-slotd class)))
+  
+  (defmeth parse-slot-description-internal ((class basic-class) ds-options slot-description slotd)
+    (declare (ignore class))
+    (let ((conc-name (ds-options-conc-name ds-options))
         (generate-accessors (ds-options-generate-accessors ds-options)))
-    #+Lucid (declare (special conc-name generate-accessors))
-    (destructuring-bind (name default . args)
-                        slot-description
-      (keyword-bind ((type nil)
-                     (read-only nil)
-                     (generate-accessor generate-accessors)
-                     (allocation :instance)
-                     (get-function nil)
-                     (put-function nil)
+      #+Lucid (declare (special conc-name generate-accessors))
+      (destructuring-bind (name default . args)
+                          slot-description
+        (keyword-bind ((type nil)
+                       (read-only nil)
+                       (generate-accessor generate-accessors)
+                       (allocation :instance)
+                       (get-function nil)
+                       (put-function nil)
+                       
+                       (accessor nil accessor-p)
+                       (initform nil)		;ignore
+                       )
+            args
+          #+Lucid(declare (special type read-only generate-accessor allocation
+                                   get-function put-function))
+          (check-member allocation '(:class :instance :dynamic)
+                        :test #'eq
+                        :pretty-name "the :allocation option")
+          (setf (slotd-name slotd)         name
+                (slotd-keyword slotd)      (make-keyword name)
+                (slotd-default slotd)      default
+                (slotd-type slotd)         type
+                (slotd-read-only slotd)    read-only
+                (slotd-accessor slotd)     (if accessor-p
+                                               accessor
+                                               (and generate-accessor
+                                                    (if conc-name
+                                                        (symbol-append conc-name
+                                                                       name)
+                                                        name)))
+                (slotd-allocation slotd)   allocation
+                (slotd-get-function slotd) (and get-function
+                                                (if (and (consp get-function)
+                                                         (eq (car get-function) 'function))
+                                                    get-function
+                                                    (list 'function get-function)))
+                (slotd-put-function slotd) (and put-function
+                                                (if (and (consp put-function)
+                                                         (eq (car put-function) 'function))
+                                                    put-function
+                                                    (list 'function put-function))))
+          slotd)))) )
 
-		     (accessor nil accessor-p)
-		     (initform nil)		;ignore
-		     )
-                    args
-        #+Lucid(declare (special type read-only generate-accessor allocation
-                                 get-function put-function))
-        (check-member allocation '(:class :instance :dynamic)
-                      :test #'eq
-                      :pretty-name "the :allocation option")
-        (setf (slotd-name slotd)         name
-              (slotd-keyword slotd)      (make-keyword name)
-              (slotd-default slotd)      default
-              (slotd-type slotd)         type
-              (slotd-read-only slotd)    read-only
-              (slotd-accessor slotd)     (if accessor-p
-					     accessor
-					     (and generate-accessor
-						  (if conc-name
-						     (symbol-append conc-name
-								    name)
-						     name)))
-              (slotd-allocation slotd)   allocation
-              (slotd-get-function slotd) (and get-function
-                                              (if (and (consp get-function)
-                                                       (eq (car get-function) 'function))
-                                                  get-function
-                                                  (list 'function get-function)))
-              (slotd-put-function slotd) (and put-function
-                                              (if (and (consp put-function)
-                                                       (eq (car put-function) 'function))
-                                                  put-function
-                                                  (list 'function put-function))))
-        slotd))))
 
 ;;;
 ;;; Take two lists of slotds and return t if they describe an set of slots of
@@ -528,7 +540,7 @@
 ;;; same shape if they have they both have the same :allocation :instance
 ;;; slots and if those slots appear in the same order.
 ;;; 
-(defun same-shape-slots-p (old-slotds new-slotds)
+(defun-compile-time same-shape-slots-p (old-slotds new-slotds)
   (do ()
       ((and (null old-slotds) (null new-slotds)) t)
     (let* ((old (pop old-slotds))
@@ -552,17 +564,20 @@
 			 (eq new-allocation :instance))))
 	(return nil)))))
 
-(defmeth slots-with-allocation ((class basic-class) slotds allocation)
-  (declare (ignore class))
-  (iterate ((slotd in slotds))
-    (when (eq (slotd-allocation slotd) allocation)
-      (collect slotd))))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defmeth slots-with-allocation ((class basic-class) slotds allocation)
+    (declare (ignore class))
+    (iterate ((slotd in slotds))
+      (when (eq (slotd-allocation slotd) allocation)
+        (collect slotd))))
+  
+  (defmeth slots-with-allocation-not ((class basic-class) slotds allocation)
+    (declare (ignore class))
+    (iterate ((slotd in slotds))
+      (unless (eq (slotd-allocation slotd) allocation)
+        (collect slotd)))))
 
-(defmeth slots-with-allocation-not ((class basic-class) slotds allocation)
-  (declare (ignore class))
-  (iterate ((slotd in slotds))
-    (unless (eq (slotd-allocation slotd) allocation)
-      (collect slotd))))
+
 
   ;;   
 ;;;;;; GET-SLOT and PUT-SLOT
