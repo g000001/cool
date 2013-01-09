@@ -514,25 +514,17 @@
 ;;  common-objects-method. Note that this macro gets expanded at the
 ;;  time this file is compiled.
 
-(defmacro defcommon-objects-meth (message arglist body)
-
-
-  `(let 
-    (
-      (discriminator-class-object (class-named 'cool.pcl::discriminator t))
-      (method-class-object (class-named 'common-objects-method t))
-    )
-
-    (cool.pcl::expand-defmeth-internal (class-prototype discriminator-class-object)
-                                       (class-prototype method-class-object)
-                                       (if (listp ,message) ,message (list ,message))
-                                       ,arglist
-                                       (list ,body)
-    )
-
-  ) ;let
-
-) ;end defcommon-objects-meth
+(defmacro defcommon-objects-meth (message arglist body &optional decls)
+  `(let ((discriminator-class-object (class-named 'cool.pcl::discriminator t))
+         (method-class-object (class-named 'common-objects-method t)))
+     (cool.pcl::expand-defmeth-internal (class-prototype
+                                         discriminator-class-object)
+                                        (class-prototype method-class-object)
+                                        (if (listp ,message)
+                                            ,message
+                                            (list ,message))
+                                        ,arglist
+                                        (append ,decls (list ,body)))))
 
 ;;define-method-Top level programmer interface to method
 ;;  definition
