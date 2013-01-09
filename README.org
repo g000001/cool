@@ -42,7 +42,7 @@ mingus@hplabs.hp.com.
 		CommonObjects on CommonLoops
 			(COOL)
 
-I) INTRODUCTION
+** I) INTRODUCTION
 
 COOL is an implementation of HP's CommonObjects on
 the Portable CommonLoops (PCL) metaclass kernel.
@@ -59,7 +59,7 @@ of Portable CommonLoops is distributed along with COOL.
 
 COOL comes as a set of files grouped into four groups:
 
-  1) Documentation
+*** 1) Documentation
 
      README-this file
 
@@ -68,7 +68,7 @@ COOL comes as a set of files grouped into four groups:
        document ATC-85-01, "Object Oriented Programming
        for Common Lisp," by Alan Snyder.
 
-  2) The System
+*** 2) The System
      co-defsys.l
      pcl-patches.l
      co-parse.l
@@ -77,14 +77,14 @@ COOL comes as a set of files grouped into four groups:
      co-dmeth.l
      co-sfun.l
 
-  3) Test and Profiling files
+*** 3) Test and Profiling files
 
      co-test.l-A generalized version of the PCL test macro.
      co-regress.l-Some simple regression tests for COOL.
      co-profmacs.l-Macros for simplifying profiling.
      co-prof.l-Profiling tests.
 
-  4) Portable CommonLoops (system date 2-24-87)
+*** 4) Portable CommonLoops (system date 2-24-87)
      The file <xxx>-low.l corresponds to the machine-dependent
      file for your system. For HP Lisp, this will be hp-low.l.
 
@@ -115,53 +115,53 @@ to get started and don't want to wait for the specification,
 look at some of the test examples in co-regress.l for
 an idea of how to use CommonObjects.
 
-II) BRINGING UP PORTABLE COMMONLOOPS
+** II) BRINGING UP PORTABLE COMMONLOOPS
 Directions are given in the file defsys.l
-Briefly, one edits the variables *pcl-pathname-defaults* (which
+Briefly, one edits the variables \*pcl-pathname-defaults* (which
 gives the location of the PCL files on your system). After that
 the PCL files can be compiled by invoking:
 
-   (require "defsys")
-   (pcl::compile-pcl)
+:   (require "defsys")
+:   (pcl::compile-pcl)
 
 and loaded by invoking:
 
-   (pcl::load-pcl)
+:   (pcl::load-pcl)
 
-III) BRINGING UP COOL
+** III) BRINGING UP COOL
 
 Cool uses the PCL defsystem. Directions are given in the file
 co-defsys.l . Briefly, in file co-defsys.l, one sets the variable
-*co-pathname-defaults* to correspond to the location of the files
+\*co-pathname-defaults* to correspond to the location of the files
 on your local system. After that, the COOL files may be compiled by invoking:
 
-   (require "co-defsys")
-   (co:compile-co)
+:   (require "co-defsys")
+:   (co:compile-co)
 
 and loaded by invoking:
 
-   (co:load-co)
+:   (co:load-co)
 
 In addition, the file pcl-patches.l contains a patch for
 the PCL function CLASS-OF. This function is specialized
 for each implementation of Common Lisp, but, in the
 released version, it does not check if the type specifier
 returned by TYPE-OF is list. You will need to modify
-the SETQ of *CLASS-OF* in your implementation xxx-low.l
+the SETQ of \*CLASS-OF* in your implementation xxx-low.l
 file so that the function PCL::ATOM-TYPE-OF is called
 on (TYPE-OF X) instead of simply TYPE-OF. To see how this was
 done for HP Lisp, look at the top of pcl-patches.l
 Remember to put the form:
 
-(eval-when (load eval)
-  (recompile-class-of)
+: (eval-when (load eval)
+:   (recompile-class-of)
+:
+: )
 
-)
-
-in your file after you have rebound *CLASS-OF*; otherwise,
+in your file after you have rebound \*CLASS-OF*; otherwise,
 the new definition will not take effect.
 
-III) COMPILATION
+** III) COMPILATION
 
 You will probably want to compile COOL before using it,
 unless your system doesn't have a compiler. There
@@ -169,8 +169,8 @@ are only three files in the COOL system itself. If
 you have set up your pathnames for REQUIRE correctly,
 then the following script should compile COOL:
 
-   (require "co-defsys")
-   (co:compile-co)
+:   (require "co-defsys")
+:   (co:compile-co)
 
 You may want to turn on optimizations before compiling.
 Before doing this, it is suggested that you try the
@@ -181,13 +181,13 @@ a CAR or CDR operation). For profiling, however, it
 is best to put as much optimization on as you think
 can safely be done.
 
-IV) LOADING
+** IV) LOADING
 
 To load the system, do the following:
- (require "co-defsys")
- (co:load-co)
+: (require "co-defsys")
+: (co:load-co)
 
-V) USE
+** V) USE
 
 There are two steps needed to use the CommonObjects
 object oriented language extensions within your
@@ -198,8 +198,8 @@ CommonObjects, you need to get access to the CommonObjects
 functions and macros. Do that by using the USE-PACKAGE
 form:
 
-(in-package <your package>)
-(use-package 'co)
+: (in-package <your package>)
+: (use-package 'co)
 
 You will now have access to CommonObjects. Note to
 users on HP Lisp: it is not possible to use both
@@ -227,7 +227,7 @@ system. To get access to these functions, the macro
 IMPORT-SPECIALIZED-FUNCTIONS needs to be invoked after the
 CO package is used:
 
-	(import-specialized-functions)
+: 	(import-specialized-functions)
 
 The Common Lisp functions will now locally reflect the
 CommonObjects semantics, but the global definitions
@@ -238,24 +238,24 @@ Here is a short description of the available CommonObjects
 operations exported from CO. For a more detailed description,
 see ATC-85-01.
 
-(define-type <type name> <options>)
+: (define-type <type name> <options>)
 
 Define a CommonObjects type whose name is <type name>. There
 are a whole host of options, including instance variable
 (slot) definition and inheritence. Macro.
 
-(define-method (<type name> <method name>) (<arguments>)
-    <body>
-)
+: (define-method (<type name> <method name>) (<arguments>)
+:     <body>
+: )
 
 Define a CommonObjects method named <method name> on <type name>.
 <method name> will typically be a keyword but need not be. Macro.
 
-(call-method (<parent type name> <parent method name>) <arguments>)
-(call-method <method name> arguments)
+: (call-method (<parent type name> <parent method name>) <arguments>)
+: (call-method <method name> arguments)
 
-(apply-method (<parent type name> <parent method name>) &rest <arguments>)
-(apply-method <method name> &rest arguments)
+: (apply-method (<parent type name> <parent method name>) &rest <arguments>)
+: (apply-method <method name> &rest arguments)
 
 Used to invoke a parent method or a method on SELF. The difference
 from sending to SELF directly is that the method to call is
@@ -263,21 +263,21 @@ determined at compile time. The CALL-METHOD form is like FUNCALL,
 APPLY-METHOD like APPLY. These forms are only valid within the
 body of a DEFINE-METHOD. Macros.
 
-(make-instance <type name> <initialization keyword list>)
+: (make-instance <type name> <initialization keyword list>)
 
 Make an instance of CommonObjects type <type name> The
 <initialization keyword list> is used to initialize
 instance variables and for other initialization purposes.
 PCL method.
 
-(=> <instance> <method name> <arguments>)
+: (=> <instance> <method name> <arguments>)
 
 Invoke operation <method name> on <instance> with <arguments>.
 This invocation operator makes no checks for errors and
 operates at full PCL messaging speed. Note that all arguments
 will be evaluated. Macro.
 
-(send? <instance> <method name> <arguments>)
+: (send? <instance> <method name> <arguments>)
 
 Invoke operation <method name> on <instance> with <arguments>,
 checking to be sure <instance> is a valid CommonObjects
@@ -286,36 +286,36 @@ Returns NIL if the operation cannot be invoked. This
 invocation operator is slow but safe. Note that all arguments
 will be evaluated. Macro.
 
-(instancep <arg>)
+: (instancep <arg>)
 
 Returns T if <arg> is a CommonObjects instance, NIL if
 not. Function.
 
-(supports-operation-p <arg> <method name>)
+: (supports-operation-p <arg> <method name>)
 
 Returns T if <arg> supports operation <method name>,
 NIL if not. Function.
 
-(assignedp <instance variable name>)
+: (assignedp <instance variable name>)
 
 Returns T if <instance variable name> has been assigned
 a value, NIL if not. Valid only within a DEFINE-METHOD
 body. Macro.
 
-(undefine-type <type name>)
+: (undefine-type <type name>)
 
 Undefine the CommonObjects type <type name>. Returns T
 if the type was undefined, NIL if not. Signals an error
 if the argument is not a symbol. Function.
 
-(rename-type <old type name> <new type name>)
+: (rename-type <old type name> <new type name>)
 
 Rename <old type name> to <new type name>. Returns T
 if the type was renamed. Signals an error if old
 type is not defined, if new type already exists,
 or if the arguments are not symbols. Function.
 
-(undefine-method <type name> <method name>)
+: (undefine-method <type name> <method name>)
 
 Undefine the method <method name> on <type name>.
 Signals an error if <type name> is not a symbol or
@@ -326,7 +326,7 @@ methods. Returns T if the operation was successful,
 NIL if not. Function.
 
 
-VI) REGRESSION TESTS
+** VI) REGRESSION TESTS
 
 The file co-regress.l contains a series of regression
 tests which test out important features of COOL.
@@ -347,10 +347,10 @@ may be that some implementation dependent problem
 is missed. If you know what the extensions are,
 then edit the file co-test.l. Go to the top
 of the file and look for the special variable
-*WITHOUT-ERRORS*. This variable should contain
+\*WITHOUT-ERRORS*. This variable should contain
 a function which generates the test with an error
 catcher in place around the code. Add
-#+<implementation name> to the list, and a LAMBDA
+\#+<implementation name> to the list, and a LAMBDA
 definition to return the proper test code with
 error catching. Note that the code should return T
 if an error occurs, and NIL if not, for the
@@ -361,7 +361,7 @@ dependent code to cool@hplabs.hp.com.
 To run the regression tests, simply REQUIRE the
 file co-regress.l:
 
-	(require "co-regress")
+: 	(require "co-regress")
 
 The test results will be printed to the standard
 output.
@@ -371,7 +371,7 @@ for compilation, since the compilation semantics
 of PCL (upon which COOL is based) are very weakly
 defined. File compilation should work, however.
 
-VII) PROFILING
+** VII) PROFILING
 
 If you're really feeling ambitious, you may even
 want to run the profiling tests to see how well
@@ -401,7 +401,7 @@ You may also want to add any implementation dependent
 code for getting clock values. The default is the
 Common Lisp function GET-INTERNAL-REAL-TIME, and
 the clock increment in milliseconds (in the
-special variable *CLOCK-INCREMENT-IN-MILLISECONDS*)
+special variable \*CLOCK-INCREMENT-IN-MILLISECONDS*)
 is calculated using the Common Lisp special
 INTERNAL-TIME-UNITS-PER-SECOND. However, many
 implementations may have special ways of getting
@@ -415,17 +415,17 @@ a file whose name (as a string) is bound to the
 special variable TEST::*OUTPUT-FILE-NAME*. The
 default string is "runprof.out", as can be
 seen by checking the special variable definition
-for *OUTPUT-FILE-NAME* at the top of co-prof.l.
+for \*OUTPUT-FILE-NAME* at the top of co-prof.l.
 If you want the results in another file, please
 SETF this variable to the file name before
 starting the profiling:
 
-	(in-package 'test)
-	(setf *output-file-name* <your file name>)
+: 	(in-package 'test)
+: 	(setf *output-file-name* <your file name>)
 
 To run the profiling tests, just:
 
-	(require "co-prof")
+: 	(require "co-prof")
 
 and, providing you've set up your REQUIRE pathnames
 correctly, you should find it.
@@ -441,7 +441,7 @@ your system. It might help identify particular
 implementation dependencies which are causing
 performance problems.
 
-VIII) CONCLUSION
+** VIII) CONCLUSION
 
 If you have problems with COOL or find any bugs,
 please report them to cool@hplabs.hp.com. It
