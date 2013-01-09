@@ -678,7 +678,9 @@
        ,(defcommon-objects-meth
             'keyword-standin::initialize-variables
             `((.inner-self. ,name) &rest keylist)
-          code))))
+          code
+          '((declare (ignorable keylist)))
+          ))))
 
 ;;build-pcl-method-def-Build a PCL method definition without
 ;; all the overhead of code walking and method object creation
