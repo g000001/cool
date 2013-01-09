@@ -8,8 +8,8 @@
   :depends-on (:fiveam)
   :components ((:file "pcl-package")
                (:file "cltl1-compat")
-               #-sbcl (:file "pcl-walk")
-               #-sbcl (:file "pcl-walk-test")
+               #-(:and) (:file "pcl-walk")
+               #-(:and) (:file "pcl-walk-test")
                #+sbcl (:file "pcl-sbcl-walker")
                (:file "pcl-macros")
                (:file "pcl-low")
@@ -18,6 +18,7 @@
                (:file "pcl-class-slots")
                (:file "pcl-defclass")
                (:file "pcl-class-prot")
+               (:file "reload-pcl-defclass"); kludge
                (:file "pcl-methods")
                (:file "pcl-dfun-templ")
                (:file "pcl-fixup")

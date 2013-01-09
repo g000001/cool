@@ -690,3 +690,4 @@
 		(capitalize-words (class-name (class-of instance)))
 		(get-slot instance 'name)))))
 
+
