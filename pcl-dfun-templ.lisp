@@ -146,7 +146,7 @@
   (let* ((arglist (make-discriminating-function-arglist required restp)))
     `(function
        (lambda ,arglist
-         #|(declare (optimize (speed 3) (safety 0)))|#
+         #|(declare (optimize (speed 0) (safety 3)))|#
 	 discriminator default-function ;ignorable
          (if (and ,@(iterate ((check in
 				     (make-checking-discriminating-function-1

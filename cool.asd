@@ -15,14 +15,14 @@
                (:file "co-dtype")
                (:file "co-sfun")
                #|(:file "co-test")|#
-               #|(:file "co-regress")|#))
+               (:file "co-regress")))
 
 
 (defmethod perform ((o test-op) (c (eql (find-system :cool))))
   (load-system :cool)
   (or (flet ((_ (pkg sym)
                (intern (symbol-name sym) (find-package pkg))))
-         (let ((result (funcall (_ :fiveam :run) (_ :cool.internal :cool))))
+         (let ((result (funcall (_ :fiveam :run) (_ :co-test :co-test))))
            (funcall (_ :fiveam :explain!) result)
            (funcall (_ :fiveam :results-status) result)))
       (error "test-op failed") ))

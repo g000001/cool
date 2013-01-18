@@ -28,176 +28,260 @@
 ; aiws@hplabs.HP.COM
 
 
-#|(provide "co-regress")|#
-
 (in-package :co-test)
 
+(def-suite co-test)
+(in-suite co-test)
 
-;;This is needed to be sure the Lisp functions are
-;;  correctly redefined
 
-(import-specialized-functions)
+(defmacro == (x y)
+  `(is (cl:equal ,x ,y)))
 
-(do-test ("define-type" :return-value T)
-     (
-      (co:define-type car 
-         (:var name :gettable)
-         (:var top-speed :settable)
-         (:var turbo-p :initable)
-         :all-initable
-       )
-       car
-     )
-     ( (instancep 'car) NIL)
-     ( (typep 'car 'instance) NIL)
-)
+
+(defmacro >_< (x)
+  `(signals (cl:error) ,x))
+
+
+(defmacro do-test (name &body body)
+  `(test ,(intern (concatenate 'string "co-test\\" name))
+     ,@body))
+
+
+(do-test "define-type"
+  (== (define-type car 
+        (:var name :gettable)
+        (:var top-speed :settable)
+        (:var turbo-p :initable)
+        :all-initable)
+      'car)
+  (== (instancep 'car) NIL)
+  (== (typep 'car 'instance) NIL))
+
+
+(def-fixture car ()
+  (let ((c (make-instance 'car)))
+    (&body)))
 
 
 (do-test "make-instance"
-      (instancep (cl:setq c (make-instance 'car :name 'porsche)))
-      (=> c :typep 'car)
-)
-
-(do-test ("make-instance error cases" :should-error T)
-      (make-instance NIL)
-      (make-instance (gensym))
-      (make-instance 'not-a-type)
-      (make-instance 'float)
-      (make-instance 'car :not-initkw 314159)
-)
-
-(do-test ("make-instance syntax" :should-error T)
-      (make-instance)
-      (make-instance '(a b))
-      (make-instance 'car :boink)
-      (make-instance 'car :name)
-      (make-instance 'car 'truck 'van)
-)
+  (with-fixture car ()
+    (is-true (instancep c))
+    (is-true (=> c :typep 'car))))
 
 
-
-(do-test ("the right methods there?" :return-value T)
-    ((supports-operation-p c :name)            T)
-    ((supports-operation-p c :set-name)        NIL)
-    ((supports-operation-p c :set-top-speed)   T)
-    ((supports-operation-p c :top-speed)       T)
-    ((supports-operation-p c :turbo-p)         NIL)
-    ((supports-operation-p c :set-turbo-p)     NIL)
-    ((supports-operation-p c :not-a-method)    NIL)
-    ((supports-operation-p c 'describe)        NIL)
-    ((supports-operation-p c 'init)            NIL)
-    ((supports-operation-p c 'channelprin)     NIL)
-    ((supports-operation-p c 'init)            NIL)
-    ((supports-operation-p c :describe)        T)
-    ((supports-operation-p c :print)           T)
-    ((supports-operation-p c :initialize)      T)
-    ((supports-operation-p c :initialize-variables)  T)
-    ((supports-operation-p c :init)            T)
-    ((supports-operation-p c :eql)             T)
-    ((supports-operation-p c :equal)           T)
-    ((supports-operation-p c :equalp)          T)
-    ((supports-operation-p c :typep)           T)
-    ((supports-operation-p c :copy)            T)
-    ((supports-operation-p c :copy-state)      T)
-    ((supports-operation-p c :copy-instance)   T)
-)
+(do-test "make-instance error cases"
+  (>_< (make-instance NIL))
+  (>_< (make-instance (gensym)))
+  (>_< (make-instance 'not-a-type))
+  (>_< (make-instance 'float))
+  (>_< (make-instance 'car :not-initkw 314159)))
 
 
-(do-test ("typep" :return-value T)
-    ((typep c 'car)                           T)
-    ((typep c 'instance)                      T)
-    ((typep c t)                              T)
-    ((typep c 'integer)                       NIL)
-    ((typep '(frog) 'car)                     NIL)
-    ((type-of c)                              car)
-)
-
-(do-test ("rename-type" :return-value T)
-    ((rename-type 'car 'auto)                 auto)
-    ((typep c 'car)                           NIL)
-    ((typep c 'auto)                          T)
-    ((type-of c)                              auto)
-    ((undefine-type 'car)                     NIL)
-    ((typep c 'auto)                          T)
-    ((typep c 'auto)                          T)
-)
-
-(do-test ("rename-type error cases" :should-error T)
-    (rename-type 'float 'pneuname)
-    (rename-type 'auto 'auto)
-    (rename-type 'car 'auto)
-)
-
-(do-test ("define-method error case" :should-error T)
-    (eval '(define-method (car :flat) ()))
-)
-
-(do-test ("now that type car is renamed" :return-value T)
-    ((=> c :name)                        porsche)
-    ((=> c :set-top-speed 157)           157)
-    ((=> c :top-speed)                   157)
-    ((define-method (auto :sportscar-p) () (> top-speed 130))    (auto :sportscar-p))
-    ((=> c :sportscar-p)                 T)
-)
+(do-test "make-instance syntax"
+  (>_< (make-instance))
+  (>_< (make-instance '(a b)))
+  (>_< (make-instance 'car :boink))
+  (>_< (make-instance 'car :name))
+  (>_< (make-instance 'car 'truck 'van)))
 
 
-(do-test ("define a new type car" :return-value T)
-    ((define-type car (:var railroad) (:var type) :all-settable)  car)
-)
+(do-test "the right methods there?"
+  (with-fixture car ()
+    (== (supports-operation-p c :name)            T)
+    (== (supports-operation-p c :set-name)        NIL)
+    (== (supports-operation-p c :set-top-speed)   T)
+    (== (supports-operation-p c :top-speed)       T)
+    (== (supports-operation-p c :turbo-p)         NIL)
+    (== (supports-operation-p c :set-turbo-p)     NIL)
+    (== (supports-operation-p c :not-a-method)    NIL)
+    (== (supports-operation-p c 'describe)        NIL)
+    (== (supports-operation-p c 'init)            NIL)
+    (== (supports-operation-p c 'channelprin)     NIL)
+    (== (supports-operation-p c 'init)            NIL)
+    (== (supports-operation-p c :describe)        T)
+    (== (supports-operation-p c :print)           T)
+    (== (supports-operation-p c :initialize)      T)
+    (== (supports-operation-p c :initialize-variables)  T)
+    (== (supports-operation-p c :init)            T)
+    (== (supports-operation-p c :eql)             T)
+    (== (supports-operation-p c :equal)           T)
+    (== (supports-operation-p c :equalp)          T)
+    (== (supports-operation-p c :typep)           T)
+    (== (supports-operation-p c :copy)            T)
+    (== (supports-operation-p c :copy-state)      T)
+    (== (supports-operation-p c :copy-instance)   T)))
 
-(do-test ("now that we have a new type car" :return-value T)
-    ((=> c :name)  porsche) 
-    ((=> c :set-top-speed 157)  157) 
-    ((=> c :top-speed)  157)
-    ((define-method (auto :sportscar-p) () (> top-speed 130))    (auto :sportscar-p))
-    ((=> c :sportscar-p)                 T)
-    ((undefine-type 'car)                T)
-)
+
+(do-test "typep"
+  (with-fixture car ()
+    (== (typep c 'car)                           T)
+    (== (typep c 'instance)                      T)
+    (== (typep c t)                              T)
+    (== (typep c 'integer)                       NIL)
+    (== (typep '(frog) 'car)                     NIL)
+    (== (type-of c)                              'car)))
 
 
-(do-test ("type for rename-type and undefine-type" :return-value T)
-    ((define-type other)  other)
-)
+(def-fixture car-class ()
+  (let ((car (gentemp "car-"))
+        (auto (gentemp "auto-")))
+    (eval `(define-type ,car 
+             (:var name (:init 'porsche) :gettable)
+             (:var top-speed :settable)
+             (:var turbo-p :initable)
+             :all-initable))
+    (let ((c (make-instance car)))
+      (declare (ignorable c))
+      (&body))))
 
-(do-test ("rename-type syntax" :should-error T)
-    (rename-type 'auto NIL)
-    (rename-type 'other 'auto)
-    (rename-type NIL 'auto)
-    (rename-type '(a) 'other)
-    (rename-type 'other '(a b))
-    (rename-type)
-    (rename-type 'auto)
-)
+
+(do-test "rename-type"
+  (with-fixture car-class ()
+    (== (rename-type car auto)                 auto)
+    (== (typep c car)                           NIL)
+    (== (typep c auto)                          T)
+    (== (type-of c)                              auto)
+    (== (undefine-type car)                     NIL)
+    (== (typep c auto)                          T)))
+
+
+(def-fixture car->auto-class ()
+  (let ((car (gentemp "car-"))
+        (auto (gentemp "auto-")))
+    (eval `(define-type ,car 
+             (:var name (:init 'porsche) :gettable)
+             (:var top-speed :settable)
+             (:var turbo-p :initable)
+             :all-initable))
+    (let ((c (make-instance car)))
+      (declare (ignorable c))
+      (rename-type car auto)
+      (&body))))
+
+
+(do-test "rename-type error cases"
+  (with-fixture car->auto-class ()
+    (>_< (rename-type 'float 'pneuname))
+    (>_< (rename-type auto auto))
+    (>_< (rename-type car auto))))
+
+
+(do-test "define-method error case"
+  (with-fixture car->auto-class ()
+    (>_< (eval `(define-method (,car :flat) ())))))
+
+
+(do-test "now that type car is renamed"
+  (with-fixture car->auto-class ()
+    (== (=> c :name)           'porsche)
+    (== (=> c :set-top-speed 157)           157)
+    (== (=> c :top-speed)                   157)
+    (== (eval `(define-method (,auto :sportscar-p) ()
+                 (> top-speed 130)))
+        `(,auto :sportscar-p))
+    (== (=> c :sportscar-p)                 T)))
+
+
+(do-test "define a new type car"
+  (with-fixture car->auto-class ()
+    (== (eval `(define-type ,car (:var railroad) (:var type) :all-settable))
+        car)))
+
+
+(def-fixture car->auto->car-class ()
+  (let ((car (gentemp "car-"))
+        (auto (gentemp "auto-")))
+    (eval `(define-type ,car 
+             (:var name (:init 'porsche) :gettable)
+             (:var top-speed :settable)
+             (:var turbo-p :initable)
+             :all-initable))
+    (let ((c (make-instance car)))
+      (declare (ignorable c))
+      (rename-type car auto)
+      (eval `(define-type ,car (:var railroad) (:var type) :all-settable))
+      (&body))))
+
+
+(do-test "now that we have a new type car"
+  (with-fixture car->auto->car-class ()
+    (== (=> c :name)  'porsche) 
+    (== (=> c :set-top-speed 157)  157) 
+    (== (=> c :top-speed)  157)
+    (== (eval `(define-method (,auto :sportscar-p) () (> top-speed 130)))
+        `(,auto :sportscar-p))
+    (== (=> c :sportscar-p)                 T)
+    (== (undefine-type car)                T)))
+
+
+(do-test "type for rename-type and undefine-type"
+  (== (define-type other)  'other))
+
+
+(do-test "rename-type syntax"
+  (with-fixture car->auto->car-class ()
+    (>_< (rename-type auto NIL))
+    (>_< (rename-type 'other auto))
+    (>_< (rename-type NIL auto))
+    (>_< (rename-type '(a) 'other))
+    (>_< (rename-type 'other '(a b)))
+    (>_< (rename-type))
+    (>_< (rename-type auto))))
 	   
 
-(do-test ("undefine-type" :return-value T)
-   ((undefine-type 'auto)                    T)
-   ((null (type-of c))                        NIL)
-   ((eq (type-of c) T)                        NIL)
-   ((member (type-of c) '(auto car))          NIL)
-   ((symbolp (type-of c))                     T)
-   ((undefine-type 'auto)                     NIL)
-   ((undefine-type 'other)                    T)
-   ((undefine-type 'float)                    NIL)
-)
+(def-fixture car->auto->car-other-class ()
+  (let ((car (gentemp "car-"))
+        (auto (gentemp "auto-"))
+        (other (gentemp "other-")))
+    (eval `(define-type ,car 
+             (:var name (:init 'porsche) :gettable)
+             (:var top-speed :settable)
+             (:var turbo-p :initable)
+             :all-initable))
+    (let ((c (make-instance car)))
+      (declare (ignorable c))
+      (rename-type car auto)
+      (eval `(define-type ,car (:var railroad) (:var type) :all-settable))
+      (eval `(define-type ,other))
+      (&body))))
 
 
-(do-test ("let's use those undefined types" :should-error T)
-   (make-instance 'auto)
-   (cl:eval '(co:define-method (auto :burp) () T))
-   (=> c :name)
-)
+(do-test "undefine-type"
+  (with-fixture car->auto->car-other-class ()
+    (== (undefine-type auto)                    T)
+    (== (null (type-of c))                        NIL)
+    (== (eq (type-of c) T)                        NIL)
+    (== (member (type-of c) `(,auto ,car))          NIL)
+    (== (symbolp (type-of c))                     T)
+    (== (undefine-type auto)                     NIL)
+    (== (undefine-type other)                    T)
+    (== (undefine-type 'float)                    NIL)))
 
-(do-test ("send? to object with undefined type" :return-value T)
 
-   ((send? c :name)  NIL)
+(do-test "let's use those undefined types"
+  (with-fixture car->auto->car-other-class ()
+    (undefine-type auto)
+    (undefine-type other)
+    ;; 
+    (>_< (make-instance auto))
+    (>_< (cl:eval `(define-method (,auto :burp) () T)))
+    (>_< (=> c :name))))
 
-)
+
+(do-test "send? to object with undefined type"
+  (with-fixture car->auto->car-other-class ()
+    (undefine-type auto)
+    (undefine-type other)
+    (== (send? c :name)  NIL)))
 
 
-(do-test ("undefine-type syntax" :should-error T)
-   (undefine-type '(a big dog))
-)
+(do-test "undefine-type syntax"
+  (>_< (undefine-type '(a big dog))))
+
+
+#||||
+
+
 
 (do-test ("define-type syntax" :should-error T)
     (cl:eval '(define-type)) 
@@ -520,4 +604,4 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+|||#

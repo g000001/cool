@@ -64,6 +64,8 @@
    :instance
    :import-specialized-functions
    :instancep)
+  (:export
+   :supports-operation-p)
   (:intern :method-alist
            :init-keywords
            :legal-parent-p)
@@ -85,12 +87,17 @@
   #+sbcl (:import-from :sb-cltl2 :compiler-let))
 
 
+(defpackage :cool.sfun
+  (:use)
+  (:export :type-of :typep :eql :equal :equalp))
+
+
 #|(defpackage :cool.internal
   (:use :cool :cl :fiveam))|#
 
 
 (defpackage :co-test
-  (:use :co :cl)
+  (:use :co :cl :fiveam)
   (:import-from :cool.pcl :do-test)
   (:shadowing-import-from :cool.pcl
    :add-method :class-name :find-method :defclass :class :defmethod
@@ -103,6 +110,8 @@
    :method
    :call-next-method
    :call-method)
+  (:shadowing-import-from :cool.sfun
+                          :type-of :typep :eql :equal :equalp)
   #|(:import-from :co 
                 ;; :=>
                 :instancep

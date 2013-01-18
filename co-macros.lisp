@@ -115,11 +115,11 @@
 
 (defvar *special-functions-list*
   (list
-    (cons ':type-of (make-symbol "TYPE-OF"))
-    (cons ':typep (make-symbol "TYPEP"))
-    (cons ':eql (make-symbol "EQL"))
-    (cons ':equal (make-symbol "EQUAL"))
-    (cons ':equalp (make-symbol "EQUALP"))
+    (cons ':type-of (intern "TYPE-OF" :cool.sfun))
+    (cons ':typep (intern "TYPEP" :cool.sfun))
+    (cons ':eql (intern "EQL" :cool.sfun))
+    (cons ':equal (intern "EQUAL" :cool.sfun))
+    (cons ':equalp (intern "EQUALP" :cool.sfun))
   )
 )
 
