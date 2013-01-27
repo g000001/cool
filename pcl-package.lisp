@@ -28,7 +28,8 @@
    :with-slots
    :make-method
    :method
-   :call-next-method)
+   :call-next-method
+   :call-method)
   (:export :do-test)
   (:export 
    :print-instance :make-specializable :rename-class :call-next-method
