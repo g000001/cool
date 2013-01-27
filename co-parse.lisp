@@ -1364,6 +1364,7 @@
        (co-deftype-error
         "~%the parent '~s',~s of the :INHERIT-FROM option, is not defined."
         (type-name type-info)
+        (type-name type-info)
         new-parent)
      
      ; ELSE The parent is partially defined.
@@ -1713,12 +1714,11 @@
 
        (progn (setf method-to-call saved-method-to-call)
               (warn
-                (format nil
-                        "DEFINE-TYPE: In type, '~A', '~A' of :VARIABLES suboption, has no corresponding method defined in parent '~A'. Will assume you want to call method '~A'."
-                        child-name
+               "DEFINE-TYPE: In type, '~A', '~A' of :VARIABLES suboption, has no corresponding method defined in parent '~A'. Will assume you want to call method '~A'."
+               child-name
                         possible-method-name
                         parent-name
-                        method-to-call)))))
+                        method-to-call))))
    method-to-call))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
