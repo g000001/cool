@@ -53,6 +53,7 @@
    :make-instance
    :define-type
    :define-method
+   :undefine-method
    :call-method
    :apply-method
    :assignedp
@@ -69,7 +70,6 @@
   (:intern :method-alist
            :init-keywords
            :legal-parent-p)
-  (:shadow :call-method)
   #|(:shadow 
    COOL:IMPORT-SPECIALIZED-FUNCTIONS COOL:INSTANCE COOL:SEND? COOL:UNDEF
    COOL:RENAME-TYPE COOL:UNDEFINE-TYPE COOL:ASSIGNEDP COOL:APPLY-METHOD
@@ -83,6 +83,7 @@
    :with-slots
    :make-method
    :method
+   :call-method
    :call-next-method)
   #+sbcl (:import-from :sb-cltl2 :compiler-let))
 
@@ -99,7 +100,7 @@
 (defpackage :co-test
   (:use :co :cl :fiveam)
   (:import-from :cool.pcl :do-test)
-  (:shadowing-import-from :cool.pcl
+  (:shadowing-import-from :co
    :add-method :class-name :find-method :defclass :class :defmethod
    :print-object
    :class-of :make-instance :slot-missing :remove-method
