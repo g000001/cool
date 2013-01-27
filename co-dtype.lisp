@@ -1083,7 +1083,7 @@
 ;;undefine-type-Undefine type typename
 
 (defun undefine-type (typename)
-  (declare (type symbol typename))
+  #|(declare (type symbol typename))|#
 
   ;;Check if typename is a symbol
 
@@ -1139,112 +1139,66 @@
 ;;  rid of method.
 
 (defun undefine-method (typename operation)
-  (declare (type symbol typename operation))
+  #|(declare (type symbol typename operation))|#
 
   ;;Check if the arguments are symbols
-
   (when (not (symbolp typename)) 
-    (error "UNDEFINE-METHOD: Type name must be a symbol.~%")
-  )
+    (error "UNDEFINE-METHOD: Type name must be a symbol.~%"))
 
   ;;If the operation is not a symbol, just return.
-
   (when (not (symbolp operation))
-    (return-from undefine-method NIL)
-  )
+    (return-from undefine-method NIL))
 
-  (let*
-    (
-
-      ;;The class object
-
-      (class (class-named typename))
-
-      ;;The operation
-
-      (opname (if (keywordp operation)
-                (keyword-standin operation)
-                operation
-              )
-      )
-
-      ;;The discriminator (if any)
-
-      (disc (discriminator-named opname))
-
-      ;;The method (if any)
-
-      (meth 
-        (if disc
-          (find-method disc (list typename) NIL T)
-        )
-      )
-
-    )
-
+  (let* (;;The class object
+         (class (class-named typename))
+         ;;The operation
+         (opname (if (keywordp operation)
+                     (keyword-standin operation)
+                     operation))
+         ;;The discriminator (if any)
+         (disc (discriminator-named opname))
+         ;;The method (if any)
+         (meth (if disc
+                   (find-method disc (list typename) NIL T))))
 
     ;;Check if the class is a CommonObjects class
-
     (when (not (eq (class-name (class-of class)) 'common-objects-class))
       (error "UNDEFINE-TYPE: Tried to undefine ~S ~  
               which is not a CommonObjects class.~%"
-              typename
-      )
-    )
+              typename))
 
     ;;Check if the method is a universal method and there
     ;; is no type specific method. Warn the user.
+    (when (and (null meth) 
+               (member operation *universal-methods* :test #'eq))
+      (warn "UNDEFINE-TYPod"))
 
-    (when (and 
-            (null meth) 
-            (member operation *universal-methods* :test #'eq)
-          )
-      (warn
-        (format 
-          NIL
-          "UNDEFINE-TYPod NIL)
-  )
-
-  (let*
-    (
-
-      ;;The class ob% which cannot be undefined."
-	  typename
-          operation
-        )
-      )
-      (return-from undefine-method NIL)
-    )            
-
-    ;;If a method was found, undefine it
-
-    (if (and meth disc)
-      (progn
-	(remove-method disc meth)
- 
-        ;;Now unbind the symbol cell, so CALL-METHODs don't work
-
-	(fmakunbound (method-function-symbol meth))
-
-        ;;Remove the symbol from the package, so that future
-	;;  attempts to create CALL-METHODs can't find it.
-	;;  But hopefully, existing CALL-METHODs will still
-        ;;  work.
-
-        (unintern (method-function-symbol meth) 
-		   (symbol-package (method-function-symbol meth))
-        )
-
-        T
-      ) ;progn
-
-      NIL
-
-    ) ;if
-
-  ) ;let
-
-) ;end undefine-method
+    (let* (;;The class ob% which cannot be undefined.
+           typename
+           operation)
+      ;; ********* lost?? *********
+      ;; https://groups.google.com/forum/?fromgroups=#!searchin/comp.sources.unix/co-dtype/comp.sources.unix/T_FDe2f3nQI/tORs8-xlUKsJ
+      ;; **************************
+      (when (and (null meth)
+                 (null disc))
+        (return-from undefine-method NIL))
+      
+      ;;If a method was found, undefine it
+      (if (and meth disc)
+          (progn
+            (remove-method disc meth)
+            
+            ;;Now unbind the symbol cell, so CALL-METHODs don't work
+            (fmakunbound (method-function-symbol meth))
+            
+            ;;Remove the symbol from the package, so that future
+            ;;  attempts to create CALL-METHODs can't find it.
+            ;;  But hopefully, existing CALL-METHODs will still
+            ;;  work.
+            (unintern (method-function-symbol meth) 
+                      (symbol-package (method-function-symbol meth)))
+            T)
+        NIL))))
 
 ;;assignedp-Indicate whether or not an instance variable is
 ;;  assigned
