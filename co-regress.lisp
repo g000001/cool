@@ -279,329 +279,421 @@
   (>_< (undefine-type '(a big dog))))
 
 
-#||||
+(do-test "define-type syntax"
+  (>_< (eval '(define-type))) 
+  (>_< (eval '(define-type (a list))))
+  (>_< (eval '(define-type actress ann-margret)))
+  (>_< (eval '(define-type actress (ann-margret))))
+  (>_< (eval '(define-type actress (:var)))) 
+  (>_< (eval '(define-type actress (:var :var)))) 
+  (>_< (eval '(define-type actress (:var :a-keyword)))) 
+  (>_< (eval '(define-type actress (:var twin) (:var not-twin) (:var twin)))) 
+  (>_< (eval '(define-type actress (:var ann-margret ())))) 
+  (>_< (eval '(define-type actress (:var ann-margret dyan-cannon)))) 
+  (>_< (eval '(define-type actress (:var ann-margret (:not-option lips)))))
+  (>_< (eval '(define-type actress (:var ann-margret (:init)))))
+  (>_< (eval '(define-type actress (:var ann-margret (:init 'one 'two)))))
+  (>_< (eval '(define-type actress (:var ann-margret :not-an-option))))
+  (>_< (eval '(define-type actress (:var ann-margret (:gettable))))))
 
 
-
-(do-test ("define-type syntax" :should-error T)
-    (cl:eval '(define-type)) 
-    (cl:eval '(define-type (a list)))
-    (cl:eval '(define-type actress ann-margret))
-    (cl:eval '(define-type actress (ann-margret)))
-    (cl:eval '(define-type actress (:var))) 
-    (cl:eval '(define-type actress (:var :var))) 
-    (cl:eval '(define-type actress (:var :a-keyword))) 
-    (cl:eval '(define-type actress (:var twin) (:var not-twin) (:var twin))) 
-    (cl:eval '(define-type actress (:var ann-margret ()))) 
-    (cl:eval '(define-type actress (:var ann-margret dyan-cannon))) 
-    (cl:eval '(define-type actress (:var ann-margret (:not-option lips))))
-    (cl:eval '(define-type actress (:var ann-margret (:init))))
-    (cl:eval '(define-type actress (:var ann-margret (:init 'one 'two))))
-    (cl:eval '(define-type actress (:var ann-margret :not-an-option)))
-    (cl:eval '(define-type actress (:var ann-margret (:gettable))))
-)
-    
-(do-test ("various define-types that should work" :return-value T)
-    ((undefine-type 'actress) NIL)
-    ((undefine-type 'self) NIL)
-)
-
-(do-test ("define an actress" :return-value T)
-    ((define-type actress (:var actress))  actress)
-)
-    
-(do-test ("check self" :return-value T)
-    ((eval '(define-type self (:var me :settable (:init 'hit))))  self)
-    ((cl:let ((self (make-instance 'self))) (=> self :me))  hit)
-
-)
-
-(do-test "get rid of self"
-    (undefine-type 'self)
-)
-
-(do-test ("initial funny business setup" :return-value T)
-    ((define-type oedipus-rex)    oedipus-rex)
-    ((define-type laius (:inherit-from oedipus-rex))  laius)
-    ((define-type jocasta (:inherit-from laius))  jocasta)
-)
-
-(do-test ("check for inheritence funny business" :should-error T)
-    (eval '(define-type oedipus-rex (:inherit-from oedipus-rex)))
-    (eval '(define-type oedipus-rex (:inherit-from laius)))
-    (eval '(define-type oedipus-rex (:inherit-from jocasta)))
-)
-
-(do-test ("clean up after funny business check" :return-value T)    
-    ((undefine-type 'jocasta) T)
-    ((undefine-type 'laius) T)
-    ((undefine-type 'oedipus-rex) T)
-)
-     
-(do-test ("get rid of it" :return-value T)
-      ((undefine-type 'animal) NIL)
-)
-
-(do-test ("general animal test" :return-value T)
-    ((cl:list (cl:makunbound 'name)
-	   (cl:makunbound 'num-legs)
-	   (cl:makunbound 'color)
-	   (cl:makunbound 'lives-where))  (name num-legs color lives-where))
-    ((define-type animal 
-	     (:var name :gettable)
-             (:var num-legs :gettable)
-	     (:var color (:init 'brown))
-	     (:var lives-where (:init 'on-ground) :settable)
-	     :all-initable
-	     )  animal)
-    ((instancep (setq an-animal (make-instance 'animal :name 'horse :num-legs 4)))   T)
-    ((type-of an-animal)                 animal)
-    ((typep an-animal 'animal)           T)
-    ((supports-operation-p an-animal :name)               T)
-    ((supports-operation-p an-animal :set-name)           NIL)
-    ((supports-operation-p an-animal :num-legs)           T)
-    ((supports-operation-p an-animal :set-num-legs)       NIL)
-    ((supports-operation-p an-animal :color)              NIL)
-    ((supports-operation-p an-animal :set-color)          NIL)
-    ((supports-operation-p an-animal :lives-where)        T)
-    ((supports-operation-p an-animal :set-lives-where)    T)
-    ((=> an-animal :num-legs)            4)
-    ((=> an-animal :name)                horse)
-    ((=> an-animal :lives-where)         on-ground)
-    ((=> an-animal :set-lives-where 'ocean)  ocean)
-    ((=> an-animal :lives-where)         ocean)
-)
-
-(do-test ("=> error case to animal" :should-error T)
-    (setq no-animal (make-instance 'animal :rocky 'bullwinkle))
-    name
-    (=> an-animal :set-name 'new-name)
-    name                              
-    num-legs                          
-    (=> an-animal :set-num-legs)      
-    (=> an-animal :set-num-legs 8)    
-    (=> an-animal :color)             
-    color                             
-    (=> an-animal :set-color 'red)    
-    lives-where                       
-    (=> an-animal :not-a-method)      
-    (=> an-animal :set-lives-where)   
-)
+(do-test "various define-types that should work"
+  (== (undefine-type 'actress) NIL)
+  (== (undefine-type 'self) NIL))
 
 
-(do-test ("=> syntax error check" :should-error T)
-    (eval '(=>))           
-    (eval '(=> an-animal)) 
-    (=> animal :lives-where)
-    (=> an-animal NIL)      
-    (=> NIL :lives-where)   
-    (=> an-animal :lives-where 'extra-parm)
-)
+(do-test "define an actress"
+  (== (define-type actress (:var actress)) 'actress)
+  (undefine-type 'actress))
 
 
-
-(do-test ("supports-operation-p syntax" :should-error T)
-    (supports-operation-p animal :lives-where) 
-)
-
-(do-test ("supports-operation-p syntax" :return-value T)
-    ((supports-operation-p an-animal NIL)            NIL)
-    ((supports-operation-p NIL :lives-where)         NIL)
-)	    
+(do-test "check self"
+  (== (eval '(define-type self (:var me :settable (:init 'hit)))) 'self)
+  (== (let ((self (make-instance 'self))) (=> self :me)) 'hit)
+  ;; "get rid of self"
+  (== (undefine-type 'self) T))
 
 
-(do-test ("instancep syntax" :return-value T)
-    ((instancep 'float)                     NIL)
-    ((instancep an-animal)                  T)
-)
+(do-test "initial funny business setup"
+  (== (define-type oedipus-rex) 'oedipus-rex)
+  (== (define-type laius (:inherit-from oedipus-rex)) 'laius)
+  (== (define-type jocasta (:inherit-from laius)) 'jocasta)
+  ;; "check for inheritence funny business"
+  (>_< (eval '(define-type oedipus-rex (:inherit-from oedipus-rex))))
+  (>_< (eval '(define-type oedipus-rex (:inherit-from laius))))
+  (>_< (eval '(define-type oedipus-rex (:inherit-from jocasta))))
+  ;; "clean up after funny business check"
+  (== (undefine-type 'jocasta) T)
+  (== (undefine-type 'laius) T)
+  (== (undefine-type 'oedipus-rex) T))
 
 
-
-(do-test ("send? to animal"  :return-value T)
-    ((send? an-animal :name)                horse)
-    ((send? an-animal :set-name 'new-name)  NIL)
-    ((send? an-animal :num-legs)            4)
-    ((send? an-animal :set-num-legs)        NIL)
-    ((send? an-animal :set-num-legs 8)      NIL)
-    ((send? an-animal :color)               NIL)
-    ((send? an-animal :set-color 'red)      NIL)
-    ((send? an-animal :lives-where)         ocean)
-    ((send? an-animal :not-a-method)        NIL)
-    ((send? an-animal :set-lives-where 'mars)  mars)
-    ((send? an-animal :lives-where)         mars)
-    ((send? an-animal NIL)            NIL)
-    ((send? NIL :lives-where)         NIL)
-)
+(do-test "get rid of it"
+  (== (undefine-type 'animal) NIL))
 
 
-(do-test ("send? syntax and error case" :should-error T)
-    (send? an-animal :set-lives-where)
-    (eval '(send?)) 
-    (eval '(send? an-animal))
-    (send? animal :lives-where) 
-    (send? an-animal :lives-where 'extra-parm) 
-)
+(do-test "general animal test"
+  (let (an-animal)
+    (== (list (makunbound 'name)
+              (makunbound 'num-legs)
+              (makunbound 'color)
+              (makunbound 'lives-where))
+        '(name num-legs color lives-where))
+    (== (define-type animal 
+          (:var name :gettable)
+          (:var num-legs :gettable)
+          (:var color (:init 'brown))
+          (:var lives-where (:init 'on-ground) :settable)
+          :all-initable)
+        'animal)
+    (== (instancep 
+         (setq an-animal (make-instance 'animal :name 'horse :num-legs 4)))
+        T)
+    (== (type-of an-animal) 'animal)
+    (== (typep an-animal 'animal) T)
+    (== (supports-operation-p an-animal :name) T)
+    (== (supports-operation-p an-animal :set-name) NIL)
+    (== (supports-operation-p an-animal :num-legs) T)
+    (== (supports-operation-p an-animal :set-num-legs) NIL)
+    (== (supports-operation-p an-animal :color) NIL)
+    (== (supports-operation-p an-animal :set-color) NIL)
+    (== (supports-operation-p an-animal :lives-where) T)
+    (== (supports-operation-p an-animal :set-lives-where) T)
+    (== (=> an-animal :num-legs) 4)
+    (== (=> an-animal :name) 'horse)
+    (== (=> an-animal :lives-where) 'on-ground)
+    (== (=> an-animal :set-lives-where 'ocean) 'ocean)
+    (== (=> an-animal :lives-where) 'ocean)))
 
 
-
-(do-test ("define-method in general" :return-value T)
-    ((define-method (animal :num-legs) ()
-		num-legs)            (animal :num-legs))
-    ((define-method (animal :num-legs) ()
-		num-legs)            (animal :num-legs))
-    ((define-method (animal :set-num-legs) (new-num-legs)
-		(setq num-legs new-num-legs))
-                                     (animal :set-num-legs))
-    ((=> an-animal :num-legs)  4)
-    ((=> an-animal :num-legs)  4)
-    ((=> an-animal :set-num-legs 2)  2)
-    ((=> an-animal :num-legs)  2)
-    ((define-method (animal :doc) () "doctari" "veterinarian")  (animal :doc))
-    ((define-method (animal :quote-two) 'train (cl:list quote train))  (animal :quote-two))
-)
-
-
-(do-test ("define-method syntax" :should-error T)
-    (eval '(define-method (float :nines) () ))
-    (=> an-animal :set-num-legs)
-    (=> an-animal :set-num-legs 1 'and 'a 2)
-    (eval '(define-method))
-    (eval '(define-method 'frog))
-    (eval '(define-method (corn mash)))
-    (eval '(define-method (animal mash) bleach))
-)
+(def-fixture animal ()
+  (unwind-protect (progn
+                    (progn (makunbound 'name)
+                           (makunbound 'num-legs)
+                           (makunbound 'color)
+                           (makunbound 'lives-where))
+                    (define-type animal 
+                      (:var name :gettable)
+                      (:var num-legs :gettable)
+                      (:var color (:init 'brown))
+                      (:var lives-where (:init 'on-ground) :settable)
+                      :all-initable)
+                    (let ((an-animal (make-instance 'animal 
+                                                    :name 'horse
+                                                    :num-legs 4))
+                          no-animal)
+                      (declare (ignorable an-animal no-animal))
+                      (&body)))
+    (undefine-type 'animal)))
 
 
-(do-test ("undefine-method" :return-value T)
-    ((=> (make-instance 'animal) :doc)  "veterinarian")
-    ((co::undefine-method 'animal 'not-a-method)  NIL)
-    ;; ((co::undefine-method 'animal '(a))  NIL) ;???
-    ((co::undefine-method 'animal :quote-two)  T)
-    ((co::undefine-method 'animal :quote-two)  NIL)
-    ((=> an-animal :doc)  "veterinarian")
-    ((co::undefine-method 'animal :doc)  T)
-)
-
-(do-test ("undefine-method error cases" :should-error T)
-    (=> an-animal :doc)
-    (undefine-method '(a) :quote-two)
-    (eval '(undefine-method))
-    (undefine-method 'not-a-type :quote-two)
-    (undefine-method 'integer :quote-two)
-)
-
-	   
-(do-test ("undefine bird" :return-value T)
-      ((undefine-type 'bird)                   NIL)
-)
-
-(do-test ("define bird type" :return-value T)
-    ((define-type bird 
-	     (:inherit-from animal 
-			    :init-keywords 
-			    (:methods :name :num-legs :set-num-legs 
-				      :lives-where :set-lives-where
-				      )
-			    )
-	     (:var aquatic-p (:init NIL))
-	     :all-initable
-	     :all-settable
-	     )                           bird)
-)
+(do-test "=> error case to animal"
+  (with-fixture animal ()
+    (>_< (setq no-animal (make-instance 'animal :rocky 'bullwinkle)))
+    (>_< name)
+    (>_< (=> an-animal :set-name 'new-name))
+    (>_< name)                              
+    (>_< num-legs)                          
+    (>_< (=> an-animal :set-num-legs))      
+    (>_< (=> an-animal :set-num-legs 8))    
+    (>_< (=> an-animal :color))             
+    (>_< color)                             
+    (>_< (=> an-animal :set-color 'red))    
+    (>_< lives-where)                       
+    (>_< (=> an-animal :not-a-method))      
+    (>_< (=> an-animal :set-lives-where))))
 
 
-(do-test ("make bird instances" :return-value T)
-    ((instancep (cl:setf ibis
-	(make-instance 'bird :name 'ibis :num-legs 2 :aquatic-p T)))   T)
-    ((=> ibis :name)                      ibis)
-    ((=> ibis :num-legs)                  2)
-    ((=> ibis :aquatic-p)                 T)
-    ((=> ibis :lives-where)               on-ground)
-)
+(do-test "=> syntax error check"
+  (with-fixture animal ()
+    (>_< (eval '(=>)))           
+    (>_< (eval '(=> an-animal))) 
+    (>_< (=> animal :lives-where))
+    (>_< (=> an-animal NIL))      
+    (>_< (=> NIL :lives-where))   
+    (>_< (=> an-animal :lives-where 'extra-parm))))
 
 
-(do-test ("make-instance error cases" :should-error T)
-    (make-instance 'bird :num-legs)
-    (make-instance 'bird :not-init-keyword 89) 
-    (=> ibis :color)               
-)
+(do-test "supports-operation-p syntax"
+  (with-fixture animal ()
+    (supports-operation-p animal :lives-where)))
 
 
-(do-test ("undefine horse" :return-value T)
-    ((undefine-type 'horse)                   NIL)
-)
-
-(do-test ("define horse type" :return-value T)
-
-    ((define-type horse
-	     (:inherit-from animal 
-			    :init-keywords 
-			    (:methods :except :num-legs :set-num-legs
-				      )
-			    )
-	     (:var races-won (:init NIL) :settable)
-	     )                           horse)
-)
+(do-test "supports-operation-p syntax"
+  (with-fixture animal ()
+    (== (supports-operation-p an-animal NIL) NIL)
+    (== (supports-operation-p NIL :lives-where) NIL)))
 
 
-(do-test ("make horse instances" :return-value T)
-    ((instancep (cl:setf wildfire
-	(make-instance 'horse :name 'wildfire)))   T)
-    ((=> wildfire :name)                      wildfire)
-    ((=> wildfire :lives-where)               on-ground)
-)
-
-(do-test ("make horse instance error cases" :should-error T)
-    (=> wildfire :num-legs) 
-    (=> wildfire :color)    
-    (=> wildfire :aquatic-p)
-    (make-instance 'horse :not-init-keyword 89) 
-    (make-instance 'horse :name) 
-)
+(do-test "instancep syntax"
+  (with-fixture animal ()
+    (== (instancep 'float) NIL)
+    (== (instancep an-animal) T)))
 
 
-(do-test ("call method on horse" :return-value T)
-    ((define-method (horse horses-name) () (call-method (animal :name))) 
-                                              (horse horses-name))
-    ((=> wildfire 'horses-name)               wildfire)
-    ((define-method (horse :num-legs) () (call-method (animal :num-legs))) 
-                                              (horse :num-legs))
-    ((define-method (horse :set-num-legs) (new-num-legs) (call-method (animal :set-num-legs) new-num-legs))
-                                              (horse :set-num-legs))
-    ((=> wildfire :set-num-legs 6)            6)
-    ((=> wildfire :num-legs)                  6)
-)
+(do-test "send? to animal"
+  (with-fixture animal ()
+    (=> an-animal :set-lives-where 'ocean)
+    (== (send? an-animal :name)                'horse)
+    (== (send? an-animal :set-name 'new-name)  NIL)
+    (== (send? an-animal :num-legs)            4)
+    (== (send? an-animal :set-num-legs)        NIL)
+    (== (send? an-animal :set-num-legs 8)      NIL)
+    (== (send? an-animal :color)               NIL)
+    (== (send? an-animal :set-color 'red)      NIL)
+    (== (send? an-animal :lives-where)         'ocean)
+    (== (send? an-animal :not-a-method)        NIL)
+    ;; (== (send? an-animal :set-lives-where 'mars)  'mars)
+    ;; (== (send? an-animal :lives-where)         'mars)
+    (== (send? an-animal NIL)            NIL)
+    (== (send? NIL :lives-where)         NIL)))
 
 
-(do-test ("apply method on horse" :return-value T)
-    ((define-method (horse horses-name) () (apply-method (animal :name) ())) 
-                                          (horse horses-name))
-    ((=> wildfire 'horses-name)                wildfire)
-    ((define-method (horse :num-legs) () (apply-method (animal :num-legs) ())) 
-                                          (horse :num-legs))
+(do-test "send? syntax and error case"
+  (with-fixture animal ()
+    (>_< (send? an-animal :set-lives-where))
+    (>_< (eval '(send?))) 
+    (>_< (eval '(send? an-animal)))
+    (>_< (send? animal :lives-where)) 
+    (>_< (send? an-animal :lives-where 'extra-parm))))
 
-    ((define-method (horse :set-num-legs) (new-num-legs) (apply-method (animal :set-num-legs) (cl:list new-num-legs)))
-                                          (horse :set-num-legs))
-    ((=> wildfire :set-num-legs 6)          6)
-    ((=> wildfire :num-legs)                     6)
-)    	   
 
-(do-test ("call-method syntax error cases" :should-error T)
-    (eval '(call-method (wildfire :name))) 
-    (eval '(apply-method (horse :name)))   
-    (eval '(apply-method (horse :name) 'not-a-list)) 
-    (eval '(define-method (horse horses-name) () (apply-method (horse)) )) 
-    (eval '(define-method (horse horses-name) () (apply-method (horse :name)) )) 
-    (eval '(define-method (horse horses-name) () (apply-method (horse :name) 'not-a-list) ))  
-    (eval '(define-method (horse horses-name) () (apply-method (horse :name 'should-not-be-here)) )) 
-)
+(do-test "define-method in general"
+  (with-fixture animal ()
+    (== (define-method (animal :num-legs) ()
+          num-legs)
+        '(animal :num-legs))
+    (== (define-method (animal :num-legs) ()
+          num-legs)
+        '(animal :num-legs))
+    (== (define-method (animal :set-num-legs) (new-num-legs)
+          (setq num-legs new-num-legs))
+        '(animal :set-num-legs))
+    (== (=> an-animal :num-legs)  4)
+    (== (=> an-animal :num-legs)  4)
+    (== (=> an-animal :set-num-legs 2)  2)
+    (== (=> an-animal :num-legs)  2)
+    (== (define-method (animal :doc) ()
+          "doctari" "veterinarian")
+        '(animal :doc))
+    (== (define-method (animal :quote-two) 'train (list quote train))
+        '(animal :quote-two))))
 
-(do-test ("undefine-method part II" :return-value T)
-    ((co::undefine-method 'horse 'unknown-method)  NIL)
-    ((co::undefine-method 'horse 'horses-name)  T)
-    ((co::undefine-method 'horse 'horses-name)  NIL)
-)
+
+(do-test "define-method syntax"
+  (with-fixture animal ()
+    (>_< (eval '(define-method (float :nines) () )))
+    (>_< (=> an-animal :set-num-legs))
+    (>_< (=> an-animal :set-num-legs 1 'and 'a 2))
+    (>_< (eval '(define-method)))
+    (>_< (eval '(define-method 'frog)))
+    (>_< (eval '(define-method (corn mash))))
+    (>_< (eval '(define-method (animal mash) bleach)))))
+
+
+#|(with-fixture animal ()
+  (define-method (animal :doc) () "doctari" "veterinarian")
+  (=> (make-instance 'animal) :doc))|#
+
+(do-test "undefine-method"
+  (with-fixture animal ()
+    (define-method (animal :doc) () "doctari" "veterinarian")
+    (define-method (animal :quote-two) 'train (list quote train))
+    ;; 
+    (== (=> (make-instance 'animal) :doc)  "veterinarian")
+    (== (undefine-method 'animal 'not-a-method)  NIL)
+    ;; (== (undefine-method 'animal '(a))  NIL) ;???
+    (== (undefine-method 'animal :quote-two)  T)
+    (== (co::undefine-method 'animal :quote-two)  NIL)
+    (== (=> an-animal :doc)  "veterinarian")
+    (== (co::undefine-method 'animal :doc)  T)
+    ))
+
+
+(undefine-type 'animal)
+
+
+(do-test "undefine-method error cases"
+  (>_< (=> an-animal :doc))
+  (>_< (undefine-method '(a) :quote-two))
+  (>_< (eval '(undefine-method)))
+  (>_< (undefine-method 'not-a-type :quote-two))
+  (>_< (undefine-method 'integer :quote-two)))
+
+
+(do-test "undefine bird"
+  (undefine-type 'bird)
+  (== (undefine-type 'bird) NIL))
+
+
+(do-test "define bird type"
+  (with-fixture animal ()
+    (== (define-type bird 
+          (:inherit-from animal 
+                         :init-keywords 
+                         (:methods :name :num-legs :set-num-legs 
+                                   :lives-where :set-lives-where))
+          (:var aquatic-p (:init NIL)) 
+          :all-initable
+          :all-settable)
+        'bird)))
+
+
+(def-fixture bird ()
+  (let ((animal (gentemp "animal-"))
+        (bird (gentemp "bird-")))
+    (unwind-protect (let (ibis)
+                      (eval
+                       `(define-type ,animal 
+                          (:var name :gettable)
+                          (:var num-legs :settable)
+                          (:var color (:init 'brown))
+                          (:var lives-where (:init 'on-ground) :settable)
+                          :all-initable))
+                      (eval
+                       `(define-type ,bird 
+                          (:inherit-from ,animal 
+                                         :init-keywords 
+                                         (:methods :name :num-legs :set-num-legs 
+                                                   :lives-where :set-lives-where))
+                          (:var aquatic-p (:init NIL)) 
+                          :all-initable
+                          :all-settable))
+                      (&body))
+      (eval `(undefine-type ',animal))
+      (eval `(undefine-type ',bird)))))
+
+
+(do-test "make bird instances"
+  (with-fixture bird ()
+    (== (instancep (setf ibis
+                         (make-instance bird
+                                        :name 'ibis
+                                        :num-legs 2
+                                        :aquatic-p T)))   
+        T)
+    (== (=> ibis :name)                      'ibis)
+    (== (=> ibis :num-legs)                  2)
+    (== (=> ibis :aquatic-p)                 T)
+    (== (=> ibis :lives-where)               'on-ground)))
+
+
+(do-test "make-instance error cases"
+  (with-fixture bird ()
+    (>_< (make-instance bird :num-legs))
+    (>_< (make-instance bird :not-init-keyword 89)) 
+    (>_< (=> ibis :color))))
+
+
+(do-test "undefine horse"
+  (== (undefine-type 'horse) NIL))
+
+
+(def-fixture horse ()
+  (let ((animal (gentemp "animal-"))
+        (horse (gentemp "horse-")))
+    (unwind-protect (let (wildfire)
+                      (declare (ignorable wildfire))
+                      (eval
+                       `(define-type ,animal 
+                          (:var name :gettable)
+                          (:var num-legs :settable)
+                          (:var color (:init 'brown))
+                          (:var lives-where (:init 'on-ground) :settable)
+                          :all-initable))
+                      (eval
+                       `(define-type ,horse
+                          (:inherit-from ,animal 
+                                         :init-keywords 
+                                         (:methods 
+                                          :except :num-legs :set-num-legs))
+                          (:var races-won (:init NIL) :settable)))
+                      (&body))
+      (eval `(undefine-type ',animal))
+      (eval `(undefine-type ',horse)))))
+
+
+(do-test "define horse type"
+  (with-fixture horse ()
+    t))
+
+
+(do-test "make horse instances"
+  (with-fixture horse ()
+    (== (instancep (setf wildfire
+                         (make-instance horse :name 'wildfire)))   T)
+    (== (=> wildfire :name) 'wildfire)
+    (== (=> wildfire :lives-where) 'on-ground)))
+
+
+(do-test "make horse instance error cases"
+  (with-fixture horse ()
+    (>_< (=> wildfire :num-legs)) 
+    (>_< (=> wildfire :color))    
+    (>_< (=> wildfire :aquatic-p))
+    (>_< (make-instance horse :not-init-keyword 89)) 
+    (>_< (make-instance horse :name))))
+
+
+(do-test "call method on horse"
+  (with-fixture horse ()
+    (== (eval `(define-method (,horse horses-name) ()
+                 (call-method (,animal :name)))) 
+        `(,horse horses-name))
+    (let ((wildfire (make-instance horse :name 'wildfire)))
+      (== (=> wildfire 'horses-name) 'wildfire))
+    (== (eval `(define-method (,horse :num-legs) ()
+                 (call-method (,animal :num-legs)))) 
+        `(,horse :num-legs))
+    (== (eval `(define-method (,horse :set-num-legs) (new-num-legs)
+                 (call-method (,animal :set-num-legs) new-num-legs)))
+        `(,horse :set-num-legs))
+    (let ((wildfire (make-instance horse :name 'wildfire)))
+      (== (=> wildfire :set-num-legs 6) 6)
+      (== (=> wildfire :num-legs) 6))))
+
+
+(do-test "apply method on horse"
+  (with-fixture horse ()
+    (== (eval `(define-method (,horse horses-name) ()
+                 (apply-method (,animal :name) ())))
+        `(,horse horses-name))
+    (let ((wildfire (make-instance horse :name 'wildfire)))
+      (== (=> wildfire 'horses-name) 'wildfire)
+      (== (eval `(define-method (,horse :num-legs) ()
+                   (apply-method (,animal :num-legs) ()))) 
+          `(,horse :num-legs))
+      
+      (== (eval `(define-method (,horse :set-num-legs) (new-num-legs)
+                   (apply-method (,animal :set-num-legs) (list new-num-legs))))
+          `(,horse :set-num-legs))
+      (== (=> wildfire :set-num-legs 6) 6)
+      (== (=> wildfire :num-legs) 6))))
+
+
+(do-test "call-method syntax error cases"
+  (>_< (eval '(call-method (wildfire :name)))) 
+  (>_< (eval '(apply-method (horse :name))))   
+  (>_< (eval '(apply-method (horse :name) 'not-a-list))) 
+  (>_< (eval '(define-method (horse horses-name) () (apply-method (horse)) ))) 
+  (>_< (eval '(define-method (horse horses-name) ()
+               (apply-method (horse :name)) ))) 
+  (>_< (eval '(define-method (horse horses-name) ()
+               (apply-method (horse :name) 'not-a-list) )))  
+  (>_< (eval '(define-method (horse horses-name) ()
+               (apply-method (horse :name 'should-not-be-here))))))
+
+
+(do-test "undefine-method part II"
+  (with-fixture horse ()
+    (eval `(define-method (,horse horses-name) ()
+             (apply-method (,animal :name) ())))
+    (== (undefine-method horse 'unknown-method)  NIL)
+    (== (undefine-method horse 'horses-name)  T)
+    (== (undefine-method horse 'horses-name)  NIL)))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-|||#
+
+
