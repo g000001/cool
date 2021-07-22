@@ -298,16 +298,18 @@
 
 
 (do-test "various define-types that should work"
-  (== (undefine-type 'actress) NIL)
-  (== (undefine-type 'self) NIL))
+  '(== (undefine-type 'actress) NIL)
+  '(== (undefine-type 'self) NIL))
 
 
 (do-test "define an actress"
+  (undefine-type 'actress)
   (== (define-type actress (:var actress)) 'actress)
   (undefine-type 'actress))
 
 
 (do-test "check self"
+  (undefine-type 'self)
   (== (eval '(define-type self (:var me :settable (:init 'hit)))) 'self)
   (== (let ((self (make-instance 'self))) (=> self :me)) 'hit)
   ;; "get rid of self"
@@ -328,11 +330,13 @@
   (== (undefine-type 'oedipus-rex) T))
 
 
-(do-test "get rid of it"
+'(do-test "get rid of it"
   (== (undefine-type 'animal) NIL))
 
 
 (do-test "general animal test"
+  "get rid of it"
+  (undefine-type 'animal)
   (let (an-animal)
     (== (list (makunbound 'name)
               (makunbound 'num-legs)

@@ -1,4 +1,4 @@
-;;;-*-Mode:LISP; Package:(PCL (LISP WALKER)); Base:10; Syntax:Common-lisp -*-
+;;;-*-Mode:LISP; Package:PCL; Base:10; Syntax:Common-lisp -*-
 ;;;
 ;;; *************************************************************************
 ;;; Copyright (c) 1985 Xerox Corporation.  All rights reserved.

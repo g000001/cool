@@ -153,7 +153,7 @@
 
 (cltl1-eval-when (compile load eval)
   (defvar *keyword-standin-package* 
-    (or (find-package 'keyword-standin) (make-package 'keyword-standin))
+    (or (find-package 'keyword-standin) (make-package 'keyword-standin :use nil))
   )
 )
 

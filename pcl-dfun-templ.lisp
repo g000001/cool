@@ -168,8 +168,10 @@
                   `(no-matching-method discriminator)))))))
 
 (defun make-checking-discriminating-function-1 (check-positions)
-  (iterate ((pos in check-positions))
-    (collect (if (null pos) 'ignore (intern (format nil "Check ~D" pos))))))
+  #|(iterate ((pos in check-positions))
+    (collect (if (null pos) 'ignore (intern (format nil "Check ~D" pos)))))|#
+  (loop :for pos :in check-positions
+        :collect (if (null pos) 'ignore (intern (format nil "Check ~D" pos)))))
 
 )
 

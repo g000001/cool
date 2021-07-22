@@ -711,18 +711,18 @@
 ;;;    
 
 (defun make-lexical-environment (macrolet/flet/labels-form environment)
-  (evalhook (list (car macrolet/flet/labels-form)
-                  (cadr macrolet/flet/labels-form)
-                  (list 'make-lexical-environment-2))
-            'make-lexical-environment-1
-            ()
-            environment))
+  (hcl:evalhook (list (car macrolet/flet/labels-form)
+                      (cadr macrolet/flet/labels-form)
+                      (list 'make-lexical-environment-2))
+                'make-lexical-environment-1
+                ()
+                environment))
 
 
 (defun make-lexical-environment-1 (form env)
   (setq form (macroexpand form #-excl env
 			       #+excl (cadr env)))
-  (evalhook form  'make-lexical-environment-1 nil env))
+  (hcl:evalhook form  'make-lexical-environment-1 nil env))
 
 (defmacro make-lexical-environment-2 (&environment env)
   (list 'quote (copy-tree env)))

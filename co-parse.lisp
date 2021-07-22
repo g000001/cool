@@ -831,6 +831,9 @@
    (:all-gettable '(parse-all-gettable-option symbol once))
 
    (:all-initable '(parse-all-initable-option symbol once))
+   
+   ;; Inheritance and the development of encapsulated software systems
+   #|mc(:required-methods )|#
 
    (otherwise nil)))
 
@@ -1329,6 +1332,14 @@
 
  (setf (svref type-info $methods-to-not-define-slot)
         (remove-duplicates args :test #'eq)))
+
+
+#|mc(defun parse-required-methods (var-names args type-info)
+  (declare (ignore var-names))
+  ;; Parses: (:required-methods M1 M2 M3), or (:required-methods).  ARGS
+  (setf (svref type-info $methods-to-not-define-slot)
+        (remove-duplicates args :test #'eq)))|#
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Parsing of :INHERIT-FROM Option and Suboption

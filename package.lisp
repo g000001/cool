@@ -85,7 +85,10 @@
    :method
    :call-method
    :call-next-method)
-  #+sbcl (:import-from :sb-cltl2 :compiler-let))
+  (:import-from
+   #+sbcl :sb-cltl2
+   #+lispworks :lw
+   :compiler-let))
 
 
 (defpackage :cool.sfun

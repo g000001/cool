@@ -100,7 +100,9 @@
 ;;; for performance penalty) it is OK to evaluate the form every time.
 ;;; 
 (defmacro load-time-eval (form)
-  `(progn ,form))
+  #+lispworks `(load-time-value ,form)
+  #-lispworks `(progn ,form)
+  )
 
   ;;   
 ;;;;;; Memory Blocks (array-like blocks of memory)

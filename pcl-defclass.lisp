@@ -47,14 +47,22 @@
 			    (pop slot-descriptions))))
     (or (listp name-and-options) (setq name-and-options (list name-and-options)))
     (setq slot-descriptions
-          (iterate ((sd in slot-descriptions))
+          #|(iterate ((sd in slot-descriptions))
             (collect
               (cond ((not (listp sd)) (list sd nil))
                     (t (unless (evenp (length sd))
                          (error "While parsing the defstruct ~S, the slot-description: ~S~%~
                                  has an odd number of elements."
                                 (car name-and-options) sd))
-                       sd)))))
+                       sd))))|#
+          (loop :for sd in slot-descriptions
+                :collect
+                (cond ((not (listp sd)) (list sd nil))
+                      (t (unless (evenp (length sd))
+                           (error "While parsing the defstruct ~S, the slot-description: ~S~%~
+                                 has an odd number of elements."
+                                  (car name-and-options) sd))
+                         sd))))
     (keyword-parse ((class 'structure))
                    (cdr name-and-options)
       (let ((class-object (class-named class t)))
@@ -196,7 +204,17 @@
 	      (compile-time-define 'defun accessor)
 	      (compile-time-define 'defun setf-discriminator-name)
 	      (compile-time-define 'defsetf accessor setf-discriminator-name)
-	      (collect `(defsetf ,accessor ,setf-discriminator-name)))))))
+	      (collect `(defsetf ,accessor ,setf-discriminator-name)))))
+        #|(iter:iter (iter:for slotd in slotds)
+	  (let ((accessor (slotd-accessor slotd))
+		setf-discriminator-name)
+	    (when accessor
+	      (setq setf-discriminator-name
+		    (make-setf-discriminator-name accessor))
+	      (compile-time-define 'defun accessor)
+	      (compile-time-define 'defun setf-discriminator-name)
+	      (compile-time-define 'defsetf accessor setf-discriminator-name)
+	      (iter:collect `(defsetf ,accessor ,setf-discriminator-name)))))|#))
 
 (defun do-accessor-definitions (name slotds)
   (let ((class (class-named name))
@@ -239,7 +257,20 @@
                                            (collect `',(make-keyword slot-name))
                                            (collect slot-name)))))
               `(defun ,(car constructor) (&rest init-plist)
-                 (apply #'make ',name init-plist))))))))
+                 (apply #'make ',name init-plist))))))
+    #|(iter:iter (iter:for constructor in constructors)
+      (when (car constructor)
+        (iter:collect
+         (if (cdr constructor)
+             `(defun ,(car constructor) ,(cadr constructor)
+                (make ',name ,@(iter:iter 
+                                 (iter:for slot-name in (cadr constructor))
+                                 (unless (memq slot-name
+                                               '(&optional &rest &aux))
+                                   (iter:collect `',(make-keyword slot-name))
+                                   (iter:collect slot-name)))))
+             `(defun ,(car constructor) (&rest init-plist)
+                (apply #'make ',name init-plist))))))|#))
 
 (define-function-template copier--class () ()
   `(function

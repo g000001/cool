@@ -1,4 +1,4 @@
-;;;-*-Mode:LISP; Package:(PCL (LISP WALKER)); Base:10; Syntax:Common-lisp -*-
+;;;-*-Mode:LISP; Package:COOL.PCL; Base:10; Syntax:Common-lisp -*-
 ;;;
 ;;; *************************************************************************
 ;;; Copyright (c) 1985 Xerox Corporation.  All rights reserved.
@@ -256,10 +256,11 @@
 	      (push `(let ((,gensym ()))
 		       ,(make-pop gensym form (if (symbolp (cdr pat)) (cdr pat) form))
 		       ,@(nreverse
-                          #-sbcl 
+                          #-(or sbcl lispworks) 
                           (destructure-internal (if (consp pat) (car pat) pat)
 						 gensym)
-                          #+sbcl (destructure-internal (car pat) gensym)))
+                          #+(or sbcl lispworks)
+                          (destructure-internal (car pat) gensym)))
 		    setqs)
 	      (when (symbolp (cdr pat))
 		(push (cdr pat) *destructure-vars*)
@@ -352,9 +353,10 @@
     (setq body
 	  (walk-form (cons 'progn body)
                      :environment env
-		     :walk-function
-		     #'(lambda (form context env &aux aux)
-			 (declare (ignore context env))
+		     :walk-function 
+		     #'(lambda (form context env cl:&aux aux)
+			 (declare (ignore context))
+                         
 			 (or (and (listp form)
 				  (setq aux (assq (car form) *iterate-result-types*))
 				  (setq result-type
@@ -364,7 +366,8 @@
 					    (funcall (cdr aux)
 						     form result-type 'check-result-type)))
 				  (funcall (cdr aux) form result-type 'macroexpand))
-			     form))))
+			     form)))
+          )
     (let* ((initially (cons 'progn
 			    (dolist (tlf body)
 			      (when (and (consp tlf) (eq (car tlf) 'initially))

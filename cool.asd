@@ -2,10 +2,17 @@
 
 (cl:in-package :asdf)
 
+#+:sbcl (require :sb-cltl2)
+#+:sbcl (require :sb-introspect)
+
 
 (defsystem :cool
   :serial t
-  :depends-on (:fiveam :cool.pcl)
+  :depends-on (:fiveam
+               :cool.pcl
+               ;#+:sbcl :sb-cltl2
+               ;#+:sbcl :sb-introspect
+               )
   :components ((:file "package")
                (:file "pcl-patches")
                (:file "co-parse")

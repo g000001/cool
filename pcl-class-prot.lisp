@@ -608,7 +608,7 @@
 			  (or (eq (car form) 'setq)
 			      (eq (car form) 'setf)))
 		     (cond ((cdddr form)
-			    (cons 'progn
+			    (cons 'locally
 				  (iterate ((pair on (cdr form) by cddr))
 				    (collect (list (car form)
 						   (car pair)

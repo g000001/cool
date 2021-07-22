@@ -791,6 +791,21 @@
 ; Default Universal Methods
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(declaim (ftype function 
+                keyword-standin::init
+                keyword-standin::initialize
+                print-instance
+                keyword-standin::describe
+                keyword-standin::eql
+                keyword-standin::equal
+                keyword-standin::equalp
+                keyword-standin::typep
+                keyword-standin::copy
+                keyword-standin::copy-instance
+                keyword-standin::copy-state
+                keyword-standin::initialize-variables))
+
+
 ;;define-universal-method-Macro to define universal methods. Note that
 ;;  DEFCOMMON-OBJECTS-METH could probably be used directly, but this
 ;;  tells what we're doing. We need a CommonObjects method here because
@@ -1285,7 +1300,7 @@
 ;;Define the instance type
 
 (deftype instance ()
-  (list 'apply 'instancep)
+  `(satisfies #'instancep)
 
 ) ;end deftype
 

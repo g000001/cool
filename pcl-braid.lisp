@@ -1,4 +1,4 @@
-;;;-*-Mode:LISP; Package:(PCL (LISP WALKER)); Base:10; Syntax:Common-lisp -*-
+;;;-*-Mode:LISP; Package:COOL.PCL; Base:10; Syntax:Common-lisp -*-
 ;;;
 ;;; *************************************************************************
 ;;; Copyright (c) 1985 Xerox Corporation.  All rights reserved.
@@ -152,28 +152,64 @@
 
 (defmacro simple-type-specs (arglist)
   `(let ((type-specs
-	   (iterate ((arg in ,arglist))
-		    (until (memq arg '(&optional &rest &key &aux)))
-		    (collect (if (listp arg) (cadr arg) 't)))))
+          #-lispworks
+          (iterate ((arg in (print ,arglist)))
+            (until (memq arg '(&optional &rest &key &aux)))
+            (collect (if (listp arg) (cadr arg) 't)))
+          #+lispworks
+          (loop :for arg :in ,arglist
+                :until (memq arg '(&optional &rest &key &aux))
+                :collect (if (listp arg) (cadr arg) 't))))
      (setq type-specs (nreverse type-specs))
+     #-lispworks
      (iterate ((type-spec in type-specs))
-	      (until (neq type-spec 't))
-	      (pop type-specs))
+       (until (neq type-spec 't))
+       (pop type-specs))
+     #+lispworks
+     (loop :for type-spec :in type-specs
+           :until (neq type-spec 't)
+           :do (pop type-specs))
      (nreverse type-specs)))
+
+#|(defmacro simple-type-specs (arglist)
+  `(let ((type-specs
+          (iter:iter (iter:for arg in ,arglist)
+            (iter:until (memq arg '(&optional &rest &key &aux)))
+            (iter:collect (if (listp arg) (cadr arg) 't)))))
+     (setq type-specs (nreverse type-specs))
+     (iter:iter (iter:for type-spec in type-specs)
+       (iter:until (neq type-spec 't))
+       (pop type-specs))
+     (nreverse type-specs)))|#
 
 (defmacro simple-without-type-specs (arglist)
   `(iterate ((loc on ,arglist))
-	    (cond ((memq (car loc) '(&optional &rest &key &aux))
+     (cond ((memq (car loc) '(&optional &rest &key &aux))
 		   (join loc) (until t))
 		  (t
 		   (collect (if (listp (car loc))
 				(caar loc)
 				(car loc)))))))
+
+#|(defmacro simple-without-type-specs (arglist)
+  `(iter:iter (iter:for loc on ,arglist)
+     (cond ((memq (car loc) '(&optional &rest &key &aux))
+            (iter:appending loc) 
+            (iter:until t))
+           (t
+            (iter:collect (if (listp (car loc))
+                              (caar loc)
+                              (car loc)))))))|#
+
 (defmacro simple-args (arglist)
   `(iterate ((arg in ,arglist))
 	    (until (eq arg '&aux))
 	    (unless (memq arg '(&optional &rest &key))
-	      (collect (if (listp arg) (car arg) arg)))))
+	      (collect (if (listp arg) (car arg) arg))))
+  #|`(loop :for arg in ,arglist
+         :until (eq arg '&aux)
+         :unless (memq arg '(&optional &rest &key))
+         :collect (if (listp arg) (car arg) arg))|#)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun bootstrap-expand-defmeth (name&options arglist body)
@@ -306,6 +342,12 @@
         (when (cdr type-spec) (collect " ")))
       '("Default")))
   
+#|(defun-compile-time make-method-name-internal (type-specifiers)
+  (if type-specifiers
+      (iter:iter (iter:for type-spec on type-specifiers)
+        (iter:collect (string (car type-spec)))
+        (when (cdr type-spec) (iter:collect " ")))
+      '("Default")))|#
 
 
   ;;
@@ -474,12 +516,16 @@
     )
   
   (defmeth make-slotd ((class basic-class) &rest keywords-and-options)
-  (declare (ignore class))
-  (apply #'make-slotd--class keywords-and-options))
+    (declare (ignore class))
+    (apply #'make-slotd--class keywords-and-options))
 
   (defmeth parse-slot-descriptions ((class basic-class) ds-options slot-descriptions)
-    (iterate ((slot-description in slot-descriptions))
-      (collect (parse-slot-description class ds-options slot-description))))
+    #|(iterate ((slot-description in slot-descriptions))
+      (collect (parse-slot-description class ds-options slot-description)))|#
+    (loop :for slot-description :in slot-descriptions
+          :collect (parse-slot-description class
+                                           ds-options
+                                           slot-description)))
   
   (defmeth parse-slot-description ((class basic-class) ds-options slot-description)
     (parse-slot-description-internal
@@ -567,15 +613,21 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defmeth slots-with-allocation ((class basic-class) slotds allocation)
     (declare (ignore class))
-    (iterate ((slotd in slotds))
+    #|(iterate ((slotd in slotds))
       (when (eq (slotd-allocation slotd) allocation)
-        (collect slotd))))
+        (collect slotd)))|#
+    (loop :for slotd :in slotds
+          :when (eq (slotd-allocation slotd) allocation)
+          :collect slotd))
   
   (defmeth slots-with-allocation-not ((class basic-class) slotds allocation)
     (declare (ignore class))
-    (iterate ((slotd in slotds))
+    #|(iterate ((slotd in slotds))
       (unless (eq (slotd-allocation slotd) allocation)
-        (collect slotd)))))
+        (collect slotd)))|#
+    (loop :for slotd :in slotds
+          :unless (eq (slotd-allocation slotd) allocation)
+          :collect slotd)))
 
 
 
